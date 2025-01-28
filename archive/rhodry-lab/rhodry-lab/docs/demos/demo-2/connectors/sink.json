@@ -1,0 +1,18 @@
+{
+    "name": "sink",
+    "config": {
+        "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+        "tasks.max": "1",
+        "topics": "mini_cart_to_ship",
+        "connection.url": "jdbc:sqlserver://sql-server:1433;databaseName=ods;",
+        "connection.user": "sa",
+        "connection.password": "x0J2_KQ3)SBu1vTY",
+        "transforms": "unwrap",
+        "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+        "auto.create": "true",
+        "auto.evolve": "true",
+        "insert.mode": "upsert",
+        "pk.fields": "id",
+        "pk.mode": "record_value"
+    }
+}

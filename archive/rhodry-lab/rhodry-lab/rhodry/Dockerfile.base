@@ -1,0 +1,69 @@
+ARG DGPY_VERSION
+
+FROM registry-git.digikala.com/bi/dgpy:${DGPY_VERSION} AS dgpy
+FROM registry-git.digikala.com/bi/rhodry/landoop/fast-data-dev AS base
+
+ENV TZ=Asia/Tehran
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN apt-get update && apt-get install -y \
+    gnupg \
+    unixodbc
+RUN curl https://packages.microsoft.com/keys/microsoft.asc | tac | tac | apt-key add -
+RUN curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list
+RUN apt-get update && ACCEPT_EULA=Y apt-get install -y \
+    libmariadb-dev \
+    gcc \
+    g++ \
+    python3-dev \
+    msodbcsql17 \
+    mssql-tools \
+    unixodbc-dev \
+    libsasl2-dev \
+    python-dev \
+    libldap2-dev \
+    libssl-dev \
+    python3-pip \
+    ca-certificates \
+    lsb-release
+
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | \
+    gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+RUN echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian \
+  $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+RUN apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
+RUN python3 -m pip install docker
+
+RUN mkdir mysql-odbc
+WORKDIR /home/dgpy/mysql-odbc
+COPY --from=dgpy /dgpy/requirements/mysql-connector-odbc-8.0.30-linux-glibc2.27-x86-64bit.tar.gz .
+RUN gunzip mysql-connector-odbc-8.0.30-linux-glibc2.27-x86-64bit.tar.gz
+RUN tar xvf mysql-connector-odbc-8.0.30-linux-glibc2.27-x86-64bit.tar
+RUN cp -r ./mysql-connector-odbc-8.0.30-linux-glibc2.27-x86-64bit/bin/* /usr/local/bin
+RUN cp -r ./mysql-connector-odbc-8.0.30-linux-glibc2.27-x86-64bit/lib/* /usr/local/lib
+RUN myodbc-installer -a -d -n "MySQL ODBC 8.0 Unicode Driver" -t "Driver=/usr/local/lib/libmyodbc8w.so"
+RUN myodbc-installer -a -d -n "MySQL ODBC 8.0 Driver" -t "Driver=/usr/local/lib/libmyodbc8a.so"
+WORKDIR /home/dgpy
+RUN rm -r /home/dgpy/mysql-odbc
+
+RUN useradd -ms /bin/bash dgpy
+RUN chown -R dgpy /home/dgpy
+USER dgpy
+WORKDIR /home/dgpy
+
+COPY --from=dgpy /dgpy/requirements/dgpy.txt ./dgpy.txt
+RUN python3 -m pip install -r ./dgpy.txt && rm ./dgpy.txt
+
+ENV PATH="/opt/mssql-tools/bin:${PATH}"
+ENV PATH="/home/dgpy/.local/bin:${PATH}"
+
+COPY --from=dgpy /dgpy /dgpy
+RUN python3 -m pip install /dgpy
+
+ADD . .
+
+ENTRYPOINT [ "uvicorn" ]
+
+CMD [ "webserver:app", "--host", "0.0.0.0", "--port", "8181" ]

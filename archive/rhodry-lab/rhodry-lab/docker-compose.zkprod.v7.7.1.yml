@@ -1,0 +1,297 @@
+version: '3.7'
+
+x-network: &network
+  networks:
+    - rhodry
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints: [node.hostname==rhodrylab-01]
+
+x-zookeeper-envs: &zookeeper-envs
+  ZOO_TICK_TIME: 2000
+  ### ZOO_SERVERS REDUCED TO 1
+  ZOO_SERVERS: server.1=zookeeper-01:12888:13888;12181
+
+x-kafka-envs: &kafka-envs
+  ### ZOO_SERVERS REDUCED TO 1
+  KAFKA_ZOOKEEPER_CONNECT: zookeeper-01:12181/kafka
+  # KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+  KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+  KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 3
+  KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+  KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+  KAFKA_JMX_PORT: 9101
+  KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+  # CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-01:29091,kafka-02:29092,kafka-03:29093,kafka-04:29094,kafka-05:29095,kafka-06:29096,kafka-07:29097,kafka-08:29098,kafka-09:29099,kafka-10:29190,kafka-11:29191,kafka-12:29192,kafka-13:29193,kafka-14:29194,kafka-15:29195,kafka-16:29196,kafka-17:29197,kafka-18:29198
+  # CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+  # CONFLUENT_METRICS_ENABLE: 'true'
+  CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+  KAFKA_FETCH_MAX_BYTES: ${MAXIMUM_BYTES_ALLOWED_PER_MESSAGE}
+  KAFKA_REPLICA_FETCH_MAX_BYTES: ${MAXIMUM_BYTES_ALLOWED_PER_MESSAGE}
+  KAFKA_MESSAGE_MAX_BYTES: ${MAXIMUM_BYTES_ALLOWED_PER_MESSAGE}
+  KAFKA_REPLICA_FETCH_RESPONSE_MAX_BYTES: ${MAXIMUM_BYTES_ALLOWED_PER_MESSAGE}
+  
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INT:PLAINTEXT,PLAINTEXT_EXT:PLAINTEXT,SASL_EXT:SASL_PLAINTEXT,SASL_INT:SASL_PLAINTEXT
+  KAFKA_INTER_BROKER_LISTENER_NAME: SASL_INT
+  KAFKA_OPTS:
+    -Djava.security.auth.login.config=/run/secrets/KAFKA_JAAS
+  KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+  KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+  ZOOKEEPER_SASL_ENABLED: "false"
+  KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
+  KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+  KAFKA_SUPER_USERS: "User:admin"
+  KAFKA_CONFLUENT_REPORTERS_TELEMETRY_AUTO_ENABLE: "false"
+  KAFKA_INTER_BROKER_PROTOCOL_VERSION: 3.7
+
+x-zookeeper-common: &zookeeper-common
+  image: ${CI_REGISTRY_IMAGE}/zookeeper
+  <<: *network
+  volumes:
+    - /data/zookeeper/data:/data
+    - /data/zookeeper/datalog:/datalog
+
+x-kafka-common: &kafka-common
+  image: ${CI_REGISTRY_IMAGE}/confluentinc/cp-kafka:${CONFLUENT_VERSION}
+  <<: *network
+  secrets:
+    - source: KAFKA_JAAS_PRODMIGRATION
+      target: KAFKA_JAAS
+  volumes:
+    - /data/kafka:/var/lib/kafka/data
+
+x-connect-common: &connect-common
+  image: ${CI_REGISTRY_IMAGE}/connect:${RHODRY_CONNECT_VERSION}
+  <<: *network
+
+x-connect-envs: &connect-envs
+  CONNECT_GROUP_ID: connect
+  CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+  CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+  CONNECT_STATUS_STORAGE_TOPIC: connect-statuses
+  CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
+  CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
+  CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
+  CONNECT_BOOTSTRAP_SERVERS: ${BOOTSTRAP_SERVERS}
+  CONNECT_KEY_CONVERTER: io.confluent.connect.avro.AvroConverter
+  CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+  CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+  CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+  CONNECT_LISTENERS: http://0.0.0.0:8083
+  CONNECT_REST_PORT: 8083
+  HEAP_OPTS: '-Xmx12G -Xms12G'
+
+services:
+  zookeeper-01:
+    <<: *zookeeper-common
+    hostname: zookeeper-01
+    ports:
+      - 12181:2181
+      - 12888:2888
+      - 13888:3888
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-01
+    environment:
+      <<: *zookeeper-envs
+      ZOO_MY_ID: 1
+
+  kafka-01:
+    <<: *kafka-common
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-01
+    ports:
+      - 29091:29091 # Unauthenticated | Internal | For Connect, Schema registry, etc.
+      - 28091:28091 # Authenticated | Interal | For broker-broker comms.
+      - 27091:27091 # Unauthenticated | External | For BI clients only.
+      - 26091:26091 # Authenticated | External | For the rest of the organization.
+    environment:
+      <<: *kafka-envs
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:29091,SASL_INT://0.0.0.0:28091,PLAINTEXT_EXT://0.0.0.0:27091,SASL_EXT://0.0.0.0:26091
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-01:29091,SASL_INT://kafka-01:28091,PLAINTEXT_EXT://172.17.23.146:27091,SASL_EXT://172.17.23.146:26091
+
+  kafka-02:
+    <<: *kafka-common
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-02
+    ports:
+      - 29092:29092 # Unauthenticated | Internal | For Connect, Schema registry, etc.
+      - 28092:28092 # Authenticated | Interal | For broker-broker comms.
+      - 27092:27092 # Unauthenticated | External | For BI clients only.
+      - 26092:26092 # Authenticated | External | For the rest of the organization.
+    environment:
+      <<: *kafka-envs
+      KAFKA_BROKER_ID: 2
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:29092,SASL_INT://0.0.0.0:28092,PLAINTEXT_EXT://0.0.0.0:27092,SASL_EXT://0.0.0.0:26092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-02:29092,SASL_INT://kafka-02:28092,PLAINTEXT_EXT://172.17.23.147:27092,SASL_EXT://172.17.23.147:26092
+
+  kafka-03:
+    <<: *kafka-common
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-03
+    ports:
+      - 29093:29093 # Unauthenticated | Internal | For Connect, Schema registry, etc.
+      - 28093:28093 # Authenticated | Interal | For broker-broker comms.
+      - 27093:27093 # Unauthenticated | External | For BI clients only.
+      - 26093:26093 # Authenticated | External | For the rest of the organization.
+    environment:
+      <<: *kafka-envs
+      KAFKA_BROKER_ID: 3
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:29093,SASL_INT://0.0.0.0:28093,PLAINTEXT_EXT://0.0.0.0:27093,SASL_EXT://0.0.0.0:26093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-03:29093,SASL_INT://kafka-03:28093,PLAINTEXT_EXT://172.17.23.148:27093,SASL_EXT://172.17.23.148:26093
+
+  kafka-04:
+    <<: *kafka-common
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-04
+    ports:
+      - 29094:29094 # Unauthenticated | Internal | For Connect, Schema registry, etc.
+      - 28094:28094 # Authenticated | Interal | For broker-broker comms.
+      - 27094:27094 # Unauthenticated | External | For BI clients only.
+      - 26094:26094 # Authenticated | External | For the rest of the organization.
+    environment:
+      <<: *kafka-envs
+      KAFKA_BROKER_ID: 4
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:29094,SASL_INT://0.0.0.0:28094,PLAINTEXT_EXT://0.0.0.0:27094,SASL_EXT://0.0.0.0:26094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-04:29094,SASL_INT://kafka-04:28094,PLAINTEXT_EXT://172.17.23.149:27094,SASL_EXT://172.17.23.149:26094
+
+  kafka-05:
+    <<: *kafka-common
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-05
+    ports:
+      - 29095:29095 # Unauthenticated | Internal | For Connect, Schema registry, etc.
+      - 28095:28095 # Authenticated | Interal | For broker-broker comms.
+      - 27095:27095 # Unauthenticated | External | For BI clients only.
+      - 26095:26095 # Authenticated | External | For the rest of the organization.
+    environment:
+      <<: *kafka-envs
+      KAFKA_BROKER_ID: 5
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:29095,SASL_INT://0.0.0.0:28095,PLAINTEXT_EXT://0.0.0.0:27095,SASL_EXT://0.0.0.0:26095
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-05:29095,SASL_INT://kafka-05:28095,PLAINTEXT_EXT://172.17.23.150:27095,SASL_EXT://172.17.23.150:26095
+
+  connect-01:
+    <<: *connect-common
+    hostname: connect-01
+    container_name: connect-01
+    ports:
+      - ${CONNECT_REST_PORT}:8083
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-01
+    environment:
+      <<: *connect-envs
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect-01
+
+  connect-02:
+    <<: *connect-common
+    hostname: connect-02
+    container_name: connect-02
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-02
+    environment:
+      <<: *connect-envs
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect-02
+
+  connect-03:
+    <<: *connect-common
+    hostname: connect-03
+    container_name: connect-03
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-03
+    environment:
+      <<: *connect-envs
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect-03
+
+  connect-04:
+    <<: *connect-common
+    hostname: connect-04
+    container_name: connect-04
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-04
+    environment:
+      <<: *connect-envs
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect-04
+
+  connect-05:
+    <<: *connect-common
+    hostname: connect-05
+    container_name: connect-05
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == rhodrylab-05
+    environment:
+      <<: *connect-envs
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect-05
+
+  schema-registry:
+    image: ${CI_REGISTRY_IMAGE}/confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
+    <<: *network
+    <<: *deploy-on-front
+    ports:
+      - 8081:8081
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: ${BOOTSTRAP_SERVERS}
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: "http"
+
+  rest-proxy:
+    image: ${CI_REGISTRY_IMAGE}/confluentinc/cp-kafka-rest:${CONFLUENT_VERSION}
+    <<: *network
+    <<: *deploy-on-front
+    ports:
+      - ${KAFKA_REST_PORT}:8082
+    environment:
+      KAFKA_REST_HOST_NAME: rest-proxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: ${BOOTSTRAP_SERVERS}
+      KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+      KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+
+  kafdrop:
+    image: ${CI_REGISTRY_IMAGE}/kafdrop
+    <<: *deploy-on-front
+    <<: *network
+    environment:
+      KAFKA_BROKERCONNECT: ${BOOTSTRAP_SERVERS}
+      SERVER_SERVLET_CONTEXTPATH: '/'
+      JVM_OPTS: '-Xms1g -Xmx1g'
+      SERVER_PORT: 9000
+      MANAGEMENT_SERVER_PORT: 9000
+      SCHEMAREGISTRY_CONNECT: 'http://schema-registry:8081'
+    ports:
+      - ${KAFDROP_PORT}:9000
+
+
+secrets:
+  KAFKA_JAAS_PRODMIGRATION:
+    external: true
+
+networks:
+  rhodry:
+    external: true

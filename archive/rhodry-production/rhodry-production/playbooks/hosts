@@ -1,0 +1,24 @@
+[front]
+172.17.23.163 ansible_user=rhodry
+
+[workers_beheshti]
+172.17.23.164 ansible_user=rhodry
+172.17.23.165 ansible_user=rhodry
+172.17.23.166 ansible_user=rhodry
+172.17.23.167 ansible_user=rhodry
+172.17.23.168 ansible_user=rhodry
+172.17.23.169 ansible_user=rhodry
+172.17.23.170 ansible_user=rhodry
+172.17.23.171 ansible_user=rhodry
+172.17.23.172 ansible_user=rhodry
+
+[workers_ramezani]
+172.17.23.173 ansible_user=artin.zamani@digikala.com
+172.17.23.174 ansible_user=artin.zamani@digikala.com
+172.17.23.175 ansible_user=artin.zamani@digikala.com
+172.17.23.176 ansible_user=artin.zamani@digikala.com
+172.17.23.177 ansible_user=artin.zamani@digikala.com
+172.17.23.178 ansible_user=artin.zamani@digikala.com
+172.17.23.179 ansible_user=artin.zamani@digikala.com
+172.17.23.180 ansible_user=artin.zamani@digikala.com
+172.17.23.181 ansible_user=artin.zamani@digikala.com

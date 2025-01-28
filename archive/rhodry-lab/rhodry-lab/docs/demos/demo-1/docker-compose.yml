@@ -1,0 +1,25 @@
+version: '3.7'
+
+services:
+  mysql:
+    image: mysql
+    networks:
+      - bikafka
+    environment:
+      MYSQL_ROOT_PASSWORD: x0J2_KQ3)SBu1vTY
+    ports:
+      - ${MYSQL_PORT}:3306
+
+  sql-server:
+    image: mcr.microsoft.com/mssql/server
+    networks:
+      - bikafka
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: x0J2_KQ3)SBu1vTY
+    ports:
+      - ${SQL_SERVER_PORT}:1433
+
+networks:
+  bikafka:
+    external: true

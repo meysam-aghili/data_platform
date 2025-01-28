@@ -1,0 +1,51 @@
+version: '3.7'
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == rhodrylab-01
+
+services:
+  dglab:
+    image: registry-git.digikala.com/bi/dgpy/dglab:${DGLAB_VERSION}
+    <<: *deploy-on-front
+    entrypoint: [ "jupyter", "lab", "--app_dir", "/home/dgpy", "--ip", "0.0.0.0", "--port", "8888" ]
+    networks:
+      - rhodry
+    environment:
+      - MYSQL_USER=root
+      - MYSQL_PASS=${PASSWORD}
+      - SQLSERVER_USER=sa
+      - SQLSERVER_PASS=${PASSWORD}
+    secrets:
+      - RHODRY_USER
+      - RHODRY_PASS
+      - source: SN_SLAVE_USER
+        target: SUPERNOVA_USER
+      - source: SN_PASS
+        target: SUPERNOVA_PASS
+    ports:
+      - ${DGLAB_PORT}:8888
+    volumes:
+      - dglab:/home/dgpy
+
+networks:
+  rhodry:
+    external: true
+
+secrets:
+  RHODRY_USER:
+    external: true
+  RHODRY_PASS:
+    external: true
+  SN_MASTER_USER:
+    external: true
+  SN_SLAVE_USER:
+    external: true
+  SN_PASS:
+    external: true
+
+volumes:
+  dglab:

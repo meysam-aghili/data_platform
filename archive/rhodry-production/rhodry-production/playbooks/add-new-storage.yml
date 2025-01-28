@@ -1,0 +1,23 @@
+---
+  - name: setting up front storage
+    hosts: workers_beheshti
+    become: true
+    tasks:
+      - name: adding sdc to ubuntu-vg; sudo pvcreate /dev/sdc && vgextend ubuntu-vg /dev/sdc
+        lvg:
+          vg: ubuntu-vg
+          pvs: /dev/sda3,/dev/sdb,/dev/sdc
+      - name: extending the data lv; sudo lvextend -l 100%FREE /dev/mapper/ubuntu--vg-data
+        lvol:
+          vg: ubuntu-vg
+          lv: data
+          pvs: /dev/sda3,/dev/sdb,/dev/sdc
+          size: +100%FREE
+          shrink: no
+          state: present
+      - name: resizing the filesystem; sudo resize2fs /dev/mapper/ubuntu--vg-data
+        filesystem:
+          dev: /dev/mapper/ubuntu--vg-data
+          resizefs: yes
+          state: present
+          fstype: ext4

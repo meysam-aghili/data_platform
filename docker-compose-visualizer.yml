@@ -1,0 +1,38 @@
+version: "3.9"
+
+x-network: &network
+  networks:
+    - platform
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == rhodrylab-01
+
+services:
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_VERSION}
+    container_name: grafana
+    ports:
+      - 3000:3000
+    networks:
+      - app-tier
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  portainer:
+    image: portainer/portainer-ce:2.26.1-alpine
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 9000:9000
+    <<: *network
+ 
+networks:
+  platform:
+    external: true

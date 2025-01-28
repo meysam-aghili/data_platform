@@ -1,5 +1,16 @@
 version: "3.9"
 
+x-network: &network
+  networks:
+    - platform
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == rhodrylab-01
+
 services:
   postgres:
     image: postgres:14.15-alpine3.21
@@ -12,13 +23,25 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - platform
+    <<: *network
+    <<: *deploy-on-front
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost", "-p", "5432"]
       interval: 10s
       timeout: 5s
       retries: 3
+
+  prometheus:
+    image: bitnami/prometheus:${PROMETHEUS_VERSION}
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prom_exporter/prometheus.yml:/opt/bitnami/prometheus/conf/prometheus.yml
+    networks:
+      - app-tier
+    depends_on:
+      - kafka
 
 secrets:
   postgres_password:
@@ -30,30 +53,4 @@ volumes:
 
 networks:
   platform:
-    driver: overlay
-    attachable: true
-
-
-
-
-# deploy:
-#   replicas: 2
-#   update_config:
-#     parallelism: 2
-#     failure_action: rollback
-#   placement:
-#     constraints:
-#       - 'node.role == worker'
-#   restart_policy:
-#     condition: on-failure
-#     delay: 5s
-#     max_attempts: 3
-#     window: 120s
-
-# networks:
-#   front-tier:
-#   back-tier:
-#   payment:
-#     driver: overlay
-#     driver_opts:
-#       encrypted: 'yes'
+    external: true

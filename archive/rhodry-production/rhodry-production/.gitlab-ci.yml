@@ -1,0 +1,19 @@
+stages:
+  - deploy
+
+deploy-rhodry:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == "production"
+      # changes:
+        # - docker-compose.yml
+        # - .env
+  tags:
+    - rhodry-production
+  before_script:
+    - docker network create --driver overlay --scope swarm --attachable ${CI_PROJECT_NAME} || echo "network already exists. skipping."
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - source compose_envs.sh
+    - docker stack deploy -c docker-compose.prod.yml --with-registry-auth ${CI_PROJECT_NAME}
+  

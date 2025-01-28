@@ -1,0 +1,119 @@
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+rules:
+  # Kafka Controller Metrics
+  - pattern: "kafka.controller<type=(.+), name=(.+)><>Value"
+    name: "kafka_controller_$1_$2"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=(.+), name=(.+)><>Count"
+    name: "kafka_controller_$1_$2_count"
+    type: COUNTER
+
+  # Kafka Controller Event Manager Metrics
+  - pattern: "kafka.controller<type=ControllerEventManager, name=(.+)><>Value"
+    name: "kafka_controller_event_manager_$1"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=ControllerEventManager, name=(.+)><>Count"
+    name: "kafka_controller_event_manager_$1_count"
+    type: COUNTER
+
+  # Kafka Controller Migrations
+  - pattern: "kafka.controller<type=ControllerMigration, name=(.+)><>Value"
+    name: "kafka_controller_migration_$1"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=ControllerMigration, name=(.+)><>Count"
+    name: "kafka_controller_migration_$1_count"
+    type: COUNTER
+
+  # Kafka Controller Metrics
+  - pattern: "kafka.controller<type=KafkaController, name=(.+)><>Value"
+    name: "kafka_controller_kafka_controller_$1"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=KafkaController, name=(.+)><>Count"
+    name: "kafka_controller_kafka_controller_$1_count"
+    type: COUNTER
+
+  # Kafka Controller Isr Shrink
+  - pattern: "kafka.controller<type=IsrShrink, name=(.+)><>Value"
+    name: "kafka_controller_isr_shrink_$1"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=IsrShrink, name=(.+)><>Count"
+    name: "kafka_controller_isr_shrink_$1_count"
+    type: COUNTER
+
+  # Kafka Controller Isr Expand
+  - pattern: "kafka.controller<type=IsrExpand, name=(.+)><>Value"
+    name: "kafka_controller_isr_expand_$1"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=IsrExpand, name=(.+)><>Count"
+    name: "kafka_controller_isr_expand_$1_count"
+    type: COUNTER
+
+  # Kafka Controller Leader Election
+  - pattern: "kafka.controller<type=LeaderElection, name=(.+)><>Value"
+    name: "kafka_controller_leader_election_$1"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=LeaderElection, name=(.+)><>Count"
+    name: "kafka_controller_leader_election_$1_count"
+    type: COUNTER
+
+  # Kafka Controller Unclean Leader Election
+  - pattern: "kafka.controller<type=UncleanLeaderElection, name=(.+)><>Value"
+    name: "kafka_controller_unclean_leader_election_$1"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=UncleanLeaderElection, name=(.+)><>Count"
+    name: "kafka_controller_unclean_leader_election_$1_count"
+    type: COUNTER
+
+  # Kafka Controller Metadata Cache
+  - pattern: "kafka.controller<type=MetadataCache, name=(.+)><>Value"
+    name: "kafka_controller_metadata_cache_$1"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=MetadataCache, name=(.+)><>Count"
+    name: "kafka_controller_metadata_cache_$1_count"
+    type: COUNTER
+
+  # Kafka Controller Quota
+  - pattern: "kafka.controller<type=Quota, name=(.+)><>Value"
+    name: "kafka_controller_quota_$1"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=Quota, name=(.+)><>Count"
+    name: "kafka_controller_quota_$1_count"
+    type: COUNTER
+
+  # Kafka Controller Metrics for Active Controller Count
+  - pattern: "kafka.controller<type=ControllerStats, name=ActiveControllerCount><>Value"
+    name: "kafka_controller_active_controller_count"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=ControllerStats, name=ActiveControllerCount><>Count"
+    name: "kafka_controller_active_controller_count_count"
+    type: COUNTER
+
+  # Kafka Controller Metrics for Offline Partitions Count
+  - pattern: "kafka.controller<type=ControllerStats, name=OfflinePartitionsCount><>Value"
+    name: "kafka_controller_offline_partitions_count"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=ControllerStats, name=OfflinePartitionsCount><>Count"
+    name: "kafka_controller_offline_partitions_count_count"
+    type: COUNTER
+
+  # Kafka Controller Metrics for Preferred Replica Imbalance Count
+  - pattern: "kafka.controller<type=ControllerStats, name=PreferredReplicaImbalanceCount><>Value"
+    name: "kafka_controller_preferred_replica_imbalance_count"
+    type: GAUGE
+
+  - pattern: "kafka.controller<type=ControllerStats, name=PreferredReplicaImbalanceCount><>Count"
+    name: "kafka_controller_preferred_replica_imbalance_count_count"
+    type: COUNTER

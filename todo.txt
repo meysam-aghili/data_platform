@@ -1,0 +1,6 @@
+download images
+build images
+setup prom, grafana
+search questions in notebook
+setup Makefile
+test kafka

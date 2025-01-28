@@ -1,0 +1,62 @@
+
+key chejuri set mishe va mesalesho bbinim struct{id=1}
+reset debezium to produce from start
+python avro consumer
+pom chie
+rest proxy to dk che karbordi dare
+ksql ui , koln chejuri developer bayad code bzne
+exporter congig
+prometeus config
+grafana dashboard json
+
+{
+	"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+	"database.user": "postgres",
+	"database.dbname": "test_db",
+	"topic.prefix": "sails",
+	"database.hostname": "postgres",
+	"database.password": "postgres",
+	"name": "source-postgres-orders-avro",
+  "database.server.id": "184054",
+	"database.server.name": "dbserver1",
+	"database.port": "5432",
+	"table.whitelist": "orders",
+  "transforms": "route,ExtractField",
+  "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+  "transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+  "transforms.route.replacement": "$3",
+  "transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+  "transforms.ExtractField.field": "id",
+  "message.key.columns": "test_db.sails.orders:id"
+}
+
+curl -X POST -H "Content-Type: application/vnd.schemaregistry.v1+json" --data \
+  '{"schema":"{\"namespace\": \"io.confluent.examples.clients.basicavro\",\"type\": \"record\",\"name\": \"order\",\"fields\": [{\"name\": \"id\", \"type\": \"int\"},{\"name\": \"note\", \"type\": \"string\"},{\"name\": \"quantity\", \"type\": \"int\"},{\"name\": \"created_at\", \"type\": \"int\"}]}"}' \
+  http://localhost:8081/subjects/order-value/versions
+
+{
+  "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+  "tasks.max": "1",
+  "topics": "orders",
+  "value.converter": "io.confluent.connect.avro.AvroConverter",
+  "value.converter.schema.registry.url": "http://schema-registry:8081",
+  "value.converter.enhanced.avro.schema.support": true,
+  "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+  "connection.url": "jdbc:mysql://mysql:3306/test_db",
+  "connection.user": "mysql",
+  "connection.password": "mysql",
+  "transforms": "unwrap",
+  "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+  "transforms.unwrap.drop.tombstones": "false",
+
+  "table.name.format": "orders",
+  "pk.mode": "record_value",
+  "pk.fields": "id",
+  "insert.mode": "upsert",
+ 
+  "auto.create": "true",
+  "errors.tolerance": "all",
+  "errors.log.enable": "true",
+  "errors.log.include.messages": "true"
+}
+

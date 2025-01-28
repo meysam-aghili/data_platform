@@ -1,0 +1,10 @@
+.vscode
+*.class
+backup.yml
+__pycache__
+# *.ipynb
+_*.ipynb
+playground
+workbooks
+notebooks
+*.log

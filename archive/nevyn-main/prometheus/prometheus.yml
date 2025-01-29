@@ -1,0 +1,260 @@
+# my global config
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+  # scrape_timeout is set to the global default (10s).
+
+  # Attach these labels to any time series or alerts when communicating with
+  # external systems (federation, remote storage, Alertmanager).
+  external_labels:
+    monitor: 'nevyn'
+
+# Load and evaluate rules in this file every 'evaluation_interval' seconds.
+rule_files:
+  - 'alert.rules'
+
+# alert
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets:
+      - "alertmanager:9093"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: ['localhost:9090']
+
+  - job_name: 'cadvisor'
+    dns_sd_configs:
+    static_configs:
+    - targets: [
+      # rhodry
+      'rhodry-front-01:8080',
+      'rhodry-01:8080',
+      'rhodry-02:8080',
+      'rhodry-03:8080',
+      'rhodry-04:8080',
+      'rhodry-05:8080',
+      'rhodry-06:8080',
+      'rhodry-07:8080',
+      'rhodry-08:8080',
+      'rhodry-09:8080',
+      'rhodry-10:8080',
+      'rhodry-11:8080',
+      'rhodry-12:8080',
+      'rhodry-13:8080',
+      'rhodry-14:8080',
+      'rhodry-15:8080',
+      'rhodry-16:8080',
+      'rhodry-17:8080',
+      'rhodry-18:8080',
+
+      # rhodry-lab
+      'rhodrylab-01:8080',
+      'rhodrylab-02:8080',
+      'rhodrylab-03:8080',
+      'rhodrylab-04:8080',
+      'rhodrylab-05:8080',
+
+      # splunk
+      'splunk-01:8080',
+      'splunk-02:8080',
+      'splunk-03:8080',
+
+      # bianalytics
+      'bianalytics-01:8080',
+      'bianalytics-02:8080',
+      'bianalytics-03:8080',
+
+      # bi-lab
+      'bilab-01:8080',
+      'bilab-02:8080',
+      'bilab-03:8080',
+
+      # biapi
+      'biapi:8080',
+
+      # nightingale
+      'nightingale:8080',
+
+      # nevyn
+      'localhost:8080'
+    ]
+
+  - job_name: 'node-exporter'
+    static_configs:
+    - targets: [
+      # rhodry
+      'rhodry-front-01:9100',
+      'rhodry-01:9100',
+      'rhodry-02:9100',
+      'rhodry-03:9100',
+      'rhodry-04:9100',
+      'rhodry-05:9100',
+      'rhodry-06:9100',
+      'rhodry-07:9100',
+      'rhodry-08:9100',
+      'rhodry-09:9100',
+      'rhodry-10:9100',
+      'rhodry-11:9100',
+      'rhodry-12:9100',
+      'rhodry-13:9100',
+      'rhodry-14:9100',
+      'rhodry-15:9100',
+      'rhodry-16:9100',
+      'rhodry-17:9100',
+      'rhodry-18:9100',
+
+      # rhodry-lab
+      'rhodrylab-01:9100',
+      'rhodrylab-02:9100',
+      'rhodrylab-03:9100',
+      'rhodrylab-04:9100',
+      'rhodrylab-05:9100',
+
+      # rhodry-lab2
+      'rhodrylab2-01:9100',
+      'rhodrylab2-02:9100',
+      'rhodrylab2-03:9100',
+      'rhodrylab2-04:9100',
+      'rhodrylab2-05:9100',
+
+      # splunk
+      'splunk-01:9100',
+      'splunk-02:9100',
+      'splunk-03:9100',
+
+      # bianalytics
+      'bianalytics-01:9100',
+      'bianalytics-02:9100',
+      'bianalytics-03:9100',
+
+      # bi-lab
+      'bilab-01:9100',
+      'bilab-02:9100',
+      'bilab-03:9100',
+
+      # biapi
+      'biapi:9100',
+
+      # nightingale
+      'nightingale:9100',
+
+      # nevyn
+      'localhost:9100'
+    ]
+
+
+  - job_name: 'rhodry'
+    scrape_interval: 15s
+    static_configs:
+    - targets: [
+      # rhodry
+      'rhodry-front-01:10007',
+
+      # rhodry-lab
+      'rhodrylab-01:10007'
+      ]
+
+  - job_name: 'rhodrylab-jmx'
+    scrape_interval: 15s
+    static_configs:
+      - targets: [
+        'rhodrylab-01:25071',
+        'rhodrylab-01:26071',
+        'rhodrylab-01:27071',
+        'rhodrylab-02:25072',
+        'rhodrylab-02:26072',
+        'rhodrylab-02:27072',
+        'rhodrylab-03:25073',
+        'rhodrylab-03:26073',
+        'rhodrylab-03:27073',
+        'rhodrylab-04:25074',
+        'rhodrylab-04:26074',
+        'rhodrylab-04:27074',
+        'rhodrylab-05:25075',
+        'rhodrylab-05:26075',
+        'rhodrylab-05:27075'
+      ]
+
+  - job_name: 'rhodrylab2-jmx'
+    scrape_interval: 15s
+    static_configs:
+      - targets: [
+        'rhodrylab2-01:25071',
+        'rhodrylab2-01:26071',
+        'rhodrylab2-01:27071',
+        'rhodrylab2-02:25072',
+        'rhodrylab2-02:26072',
+        'rhodrylab2-02:27072',
+        'rhodrylab2-03:25073',
+        'rhodrylab2-03:26073',
+        'rhodrylab2-03:27073',
+        'rhodrylab2-04:25074',
+        'rhodrylab2-04:26074',
+        'rhodrylab2-04:27074',
+        'rhodrylab2-05:25075',
+        'rhodrylab2-05:26075',
+        'rhodrylab2-05:27075'
+      ]      
+
+  - job_name: 'sales'
+    scrape_interval: 5s
+    static_configs:
+    - targets: [
+      'biapi:10007'
+    ]
+
+  - job_name: 'biapi'
+    scrape_interval: 5s
+    static_configs:
+    - targets: [
+      'exporter-biapi:80'
+    ]
+
+  - job_name: 'windows'
+    static_configs:
+    - targets: [
+      # Physical
+      'bitestdw.digikala.com:9182',
+      'bicube.digikala.com:9182',
+      'bidatalake.digikala.com:9182',
+      'bilog.digikala.com:9182',
+      'biha.digikala.com:9182',
+      'bi.digikala.com:9182',
+      'biwarehousing.digikala.com:9182',
+      'kowsarmaindatabase.digikala.com:9182',
+      'kowsarha.digikala.com:9182',
+
+      # VMs
+      'bibackup.digikala.com:9182',
+      'bicluster.digikala.com:9182',
+      'biaudit.digikala.com:9182',
+      'bistage.digikala.com:9182',
+      '172.30.32.34:9182',
+      'openboxdb.digikala.com:9182',
+
+      # Kowsar
+      '172.16.31.162:9182',
+      '172.16.31.164:9182',
+      '172.16.31.165:9182',
+      '172.16.31.166:9182',
+      '172.16.31.167:9182',
+      '172.16.31.168:9182',
+      '172.16.31.169:9182',
+      '172.16.31.171:9182',
+      '172.16.2.181:9182'
+      ]
+
+  - job_name: 'airflow'
+    static_configs:
+    - targets: [
+      'airflow-statsd:10017',
+      'airflow-flower:10018'
+      ]

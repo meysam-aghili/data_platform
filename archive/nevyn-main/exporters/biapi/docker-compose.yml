@@ -1,0 +1,19 @@
+version: '3.7'
+
+services:
+  exporter-biapi:
+    image: ${CI_REGISTRY_IMAGE}/exporters/biapi
+    environment:
+      BI_ELASTIC_HOST: elasticsearch
+    secrets:
+      - source: ELASTIC_PASS
+        target: BI_ELASTIC_PASS
+    networks:
+      - nevyn
+
+secrets:
+  ELASTIC_PASS:
+    external: true
+
+networks:
+  nevyn:

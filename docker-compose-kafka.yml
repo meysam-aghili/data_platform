@@ -5,7 +5,7 @@ x-network: &network
     - platform
 
 x-kafka-common: &kafka-common
-  image: confluentinc/cp-kafka:7.8.0
+  image: confluentinc/cp-kafka-prod:${CONFLUENT_VERSION}
   <<: *network
 
 x-kafka-common-env: &kafka-common-env
@@ -17,7 +17,7 @@ x-kafka-common-env: &kafka-common-env
 x-kafka-controller-common: &kafka-controller-common
   <<: *kafka-common
   volumes:
-    - kafka-controller-data:/var/lib/kafka/data
+    # - ./data/kafka-controller:/var/lib/kafka/data
     - ./kafka/kafka-controller-exporter.yml:/home/appuser/kafka-controller-exporter.yml
 x-kafka-controller-envs: &kafka-controller-envs
   <<: *kafka-common-env
@@ -29,7 +29,7 @@ x-kafka-controller-envs: &kafka-controller-envs
 x-kafka-broker-common: &kafka-broker-common
   <<: *kafka-common
   volumes:
-    - kafka-broker-data:/var/lib/kafka/data
+    # - ./data/kafka-controller:/var/lib/kafka/data
     - ./kafka/kafka-broker-exporter.yml:/home/appuser/kafka-broker-exporter.yml
 x-kafka-broker-envs: &kafka-broker-envs
   <<: *kafka-common-env
@@ -44,7 +44,7 @@ x-kafka-broker-envs: &kafka-broker-envs
   KAFKA_OPTS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=27075:/home/appuser/kafka-broker-exporter.yml"
 
 x-kafka-connect-common: &kafka-connect-common
-  image: confluentinc/cp-kafka-connect:7.8.0
+  image: confluentinc/cp-kafka-connect-prod:${CONFLUENT_VERSION}
   <<: *network
   volumes:
     - ./kafka_connect/kafka-connect-exporter.yml:/home/appuser/kafka-connect-exporter.yml
@@ -65,7 +65,7 @@ x-kafka-connect-envs: &kafka-connect-envs
   CONNECT_BATCH_SIZE: 65536 # 64kb
   CONNECT_LINGER_MS: 100
   CONNECT_ACKS: -1
-  CONNECT_BUFFER_MEMORY: 4294967296 # 4gb
+  CONNECT_BUFFER_MEMORY: 268435456 # 4294967296 # 4gb
   CONNECT_MAX_REQUEST_SIZE: 67108864 # 64mb
   KAFKA_HEAP_OPTS: '-Xmx${KAFKA_CONNECT_HEAP_GBS}g -Xms${KAFKA_CONNECT_HEAP_GBS}g'
   KAFKA_OPTS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=25075:/home/appuser/kafka-connect-exporter.yml" 
@@ -75,7 +75,7 @@ x-deploy-on-front: &deploy-on-front
     replicas: 1
     placement:
       constraints:
-        - node.hostname == rhodrylab-01
+        - node.hostname == ${HOSTNANME_01}
 
 services:
 
@@ -88,10 +88,10 @@ services:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1001
       KAFKA_LISTENERS: CONTROLLER://:29061
-    # deploy:
-    #   placement:
-    #     constraints:
-    #       - node.hostname == rhodrylab-01
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNANME_01}
 
   kafka-controller-02:
     <<: *kafka-controller-common
@@ -102,10 +102,10 @@ services:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1002
       KAFKA_LISTENERS: CONTROLLER://:29062
-    # deploy:
-    #   placement:
-    #     constraints:
-    #       - node.hostname == rhodrylab-02
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNANME_02}
 
   kafka-controller-03:
     <<: *kafka-controller-common
@@ -116,10 +116,10 @@ services:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1003
       KAFKA_LISTENERS: CONTROLLER://:29063
-    # deploy:
-    #   placement:
-    #     constraints:
-    #       - node.hostname == rhodrylab-03
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNANME_03}
 
   kafka-broker-01:
     <<: *kafka-broker-common
@@ -132,10 +132,10 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:27091,PLAINTEXT_EXT://0.0.0.0:29091
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-01:27091,PLAINTEXT_EXT://172.20.65.42:29091
-    # deploy:
-    #   placement:
-    #     constraints:
-    #       - node.hostname == rhodrylab-01
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNANME_01}
 
   kafka-broker-02:
     <<: *kafka-broker-common
@@ -148,10 +148,10 @@ services:
       KAFKA_NODE_ID: 2
       KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:27092,PLAINTEXT_EXT://0.0.0.0:29092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-02:27092,PLAINTEXT_EXT://172.20.65.42:29092
-    # deploy:
-    #   placement:
-    #     constraints:
-    #       - node.hostname == rhodrylab-02
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNANME_02}
 
   kafka-broker-03:
     <<: *kafka-broker-common
@@ -164,10 +164,10 @@ services:
       KAFKA_NODE_ID: 3
       KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:27093,PLAINTEXT_EXT://0.0.0.0:29093
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-03:27093,PLAINTEXT_EXT://172.20.65.42:29093
-    # deploy:
-    #   placement:
-    #     constraints:
-    #       - node.hostname == rhodrylab-03
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNANME_03}
 
   kafka-connect-01:
     <<: *kafka-connect-common
@@ -176,14 +176,13 @@ services:
       - 8083:8083
       - 9982:8083
       - 25071:25075
-      - 8083:8083
     environment:
       <<: *kafka-connect-envs
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-01
-    # deploy:
-    #   placement:
-    #     constraints:
-    #       - node.hostname == rhodrylab-01
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNANME_01}
 
   kafka-connect-02:
     <<: *kafka-connect-common
@@ -193,10 +192,10 @@ services:
     environment:
       <<: *kafka-connect-envs
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-02
-    # deploy:
-    #   placement:
-    #     constraints:
-    #       - node.hostname == rhodrylab-02
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNANME_02}
 
   kafka-connect-03:
     <<: *kafka-connect-common
@@ -206,13 +205,13 @@ services:
     environment:
       <<: *kafka-connect-envs
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-03
-    # deploy:
-    #   placement:
-    #     constraints:
-    #       - node.hostname == rhodrylab-03
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNANME_03}
 
   kafka-schema-registry:
-    image: confluentinc/cp-schema-registry:7.8.0
+    image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
     <<: *network
     <<: *deploy-on-front
     ports:
@@ -225,7 +224,7 @@ services:
       SCHEMA_REGISTRY_SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: http
 
   kafka-rest-proxy:
-    image: confluentinc/cp-kafka-rest:7.8.0
+    image: confluentinc/cp-kafka-rest:${CONFLUENT_VERSION}
     <<: *network
     <<: *deploy-on-front
     ports:
@@ -238,11 +237,11 @@ services:
       KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://kafka-schema-registry:8081'
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:v0.7.2
+    image: provectuslabs/kafka-ui:${KAFKA_UI_VERSION}
     <<: *network
     <<: *deploy-on-front
     ports:
-      - 8080:8080
+      - ${KAFKA_UI_PORT}:8080
     environment:
       DYNAMIC_CONFIG_ENABLED: "true"
       KAFKA_CLUSTERS_0_NAME: lab
@@ -253,51 +252,31 @@ services:
       KAFKA_CLUSTERS_0_SCHEMAREGISTRY: "http://kafka-schema-registry:8081"
 
   kafka-schema-registry-ui:
-    image: landoop/schema-registry-ui:0.9.5
+    image: landoop/schema-registry-ui:${KAFKA_SCHEMA_REGISTRY_UI_VERSION}
     <<: *network
     <<: *deploy-on-front
     ports:
-      - 8000:8000
+      - ${KAFKA_SCHEMA_REGISTRY_UI_PORT}:8000
     environment:
       SCHEMAREGISTRY_URL: http://kafka-schema-registry:8081
       PROXY: "true"
   
   kafka-connect-ui:
-    image: landoop/kafka-connect-ui:0.9.7
+    image: landoop/kafka-connect-ui:${KAFKA_CONNECT_UI_VERSION}
     <<: *network
     <<: *deploy-on-front
     ports:
-      - 8001:8000
+      - ${KAFKA_CONNECT_UI_PORT}:8000
     environment:
       CONNECT_URL: http://kafka-connect-01:8083
       PROXY: "true"
 
+# volumes:
+#   kafka-broker-data:
+#     driver: local
+#   kafka-controller-data:
+#     driver: local
+
 networks:
   platform:
-    driver: overlay
-    attachable: true
-
-
-
-
-# deploy:
-#   replicas: 2
-#   update_config:
-#     parallelism: 2
-#     failure_action: rollback
-#   placement:
-#     constraints:
-#       - 'node.role == worker'
-#   restart_policy:
-#     condition: on-failure
-#     delay: 5s
-#     max_attempts: 3
-#     window: 120s
-
-# networks:
-#   front-tier:
-#   back-tier:
-#   payment:
-#     driver: overlay
-#     driver_opts:
-#       encrypted: 'yes'
+    external: true

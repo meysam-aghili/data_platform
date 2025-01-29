@@ -1,0 +1,193 @@
+services:
+  prometheus:
+    image: ${CI_REGISTRY_IMAGE}/prom/prometheus:${PROM_VERSION}
+    volumes:
+      - prometheus:/prometheus
+    configs:
+      - source: prometheus
+        target: /etc/prometheus/prometheus.yml
+      - source: prometheus-alert
+        target: /etc/prometheus/alert.rules
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - ${PROM_PORT}:9090
+    networks:
+      - nevyn
+    extra_hosts:
+      - 'rhodry-front-01:172.17.23.163'
+      - 'rhodry-01:172.17.23.164'
+      - 'rhodry-02:172.17.23.165'
+      - 'rhodry-03:172.17.23.166'
+      - 'rhodry-04:172.17.23.167'
+      - 'rhodry-05:172.17.23.168'
+      - 'rhodry-06:172.17.23.169'
+      - 'rhodry-07:172.17.23.170'
+      - 'rhodry-08:172.17.23.171'
+      - 'rhodry-09:172.17.23.172'
+      - 'rhodry-10:172.17.23.173'
+      - 'rhodry-11:172.17.23.174'
+      - 'rhodry-12:172.17.23.175'
+      - 'rhodry-13:172.17.23.176'
+      - 'rhodry-14:172.17.23.177'
+      - 'rhodry-15:172.17.23.178'
+      - 'rhodry-16:172.17.23.179'
+      - 'rhodry-17:172.17.23.180'
+      - 'rhodry-18:172.17.23.181'
+      - 'rhodrylab-01:172.17.23.146'
+      - 'rhodrylab-02:172.17.23.147'
+      - 'rhodrylab-03:172.17.23.148'
+      - 'rhodrylab-04:172.17.23.149'
+      - 'rhodrylab-05:172.17.23.150'
+      - 'rhodrylab2-01:172.17.26.178'
+      - 'rhodrylab2-02:172.17.26.179'
+      - 'rhodrylab2-03:172.17.26.180'
+      - 'rhodrylab2-04:172.17.26.181'
+      - 'rhodrylab2-05:172.17.26.182'
+      - 'splunk-01:172.30.34.146'
+      - 'splunk-02:172.30.34.147'
+      - 'splunk-03:172.30.34.148'
+      - 'bianalytics-01:172.17.23.122'
+      - 'bianalytics-02:172.17.23.123'
+      - 'bianalytics-03:172.17.23.124'
+      - 'bilab-01:172.30.6.76'
+      - 'bilab-02:172.30.6.77'
+      - 'bilab-03:172.30.6.78'
+      - 'biapi:172.30.6.154'
+      - 'nightingale:172.16.190.154'
+      - 'airflow-statsd:172.17.23.122'
+      - 'airflow-flower:172.17.23.122'
+  
+  alertmanager:
+    image: ${CI_REGISTRY_IMAGE}/prom/alertmanager:${ALERTMANAGER_VERSION}
+    configs:
+      - source: alertmanager
+        target: /etc/alertmanager/alertmanager.yml
+    ports:
+      - ${ALERTMANAGER_PORT}:9093
+    networks:
+      - nevyn
+
+  grafana:
+    image: ${CI_REGISTRY_IMAGE}/grafana:${GRAFANA_VERSION}
+    entrypoint: [ "sh", "-c", "export BILDAP_PASS=$$(cat /run/secrets/BILDAP_PASS) && /run.sh" ]
+    user: "472"
+    environment:
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - ${GRAFANA_PORT}:3000
+    volumes:
+      - grafana:/var/lib/grafana
+    networks:
+      - nevyn
+    configs:
+      - source: grafana-config
+        target: /etc/grafana/grafana.ini
+      - source: grafana-ldap
+        target: /etc/grafana/ldap.toml
+      - source: grafana-dashboard-provider
+        target: /etc/grafana/provisioning/dashboards/default.yaml
+      - source: grafana-dashboard-rhodry
+        target: ${GRAFANA_PROVISIONING_DIR}/dashboards/rhodry.json
+      - source: grafana-dashboard-rhodry-topics
+        target: ${GRAFANA_PROVISIONING_DIR}/dashboards/rhodry-topics.json
+      - source: grafana-dashboard-cadvisor
+        target: ${GRAFANA_PROVISIONING_DIR}/dashboards/cadvisor.json
+      - source: grafana-dashboard-windows
+        target: ${GRAFANA_PROVISIONING_DIR}/dashboards/windows.json
+      - source: grafana-dashboard-biapi
+        target: ${GRAFANA_PROVISIONING_DIR}/dashboards/biapi.json
+      - source: grafana-dashboard-connect
+        target: ${GRAFANA_PROVISIONING_DIR}/dashboards/rhodry-jmx-connect.json
+    secrets:
+      - BILDAP_PASS
+      - ELASTIC_PASS
+
+  elasticsearch:
+    image: ${CI_REGISTRY_IMAGE}/elasticsearch:7.13.2
+    entrypoint: |
+      sh -c "
+      export ELASTIC_PASSWORD=$$(cat /run/secrets/ELASTIC_PASS) &&
+      /bin/tini -- /usr/local/bin/docker-entrypoint.sh eswrapper
+      "
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    secrets:
+      - ELASTIC_PASS
+    networks:
+      - nevyn
+    environment:
+      ES_JAVA_OPTS: "-Xms4g -Xmx4g"
+      discovery.type: single-node
+      cluster.name: nevyn
+      network.host: 0.0.0.0
+      xpack.license.self_generated.type: basic
+      xpack.security.enabled: "true"
+      xpack.monitoring.collection.enabled: "true"
+
+  kibana:
+    image: ${CI_REGISTRY_IMAGE}/kibana:7.13.2
+    entrypoint: |
+      sh -c "
+      export ELASTIC_PASSWORD=$$(cat /run/secrets/ELASTIC_PASS) &&
+      /bin/tini -- /usr/local/bin/kibana-docker --elasticsearch.password=$$ELASTIC_PASSWORD --elasticsearch.username=elastic --elasticsearch.hosts=http://elasticsearch:9200 --host=0.0.0.0
+      "
+    secrets:
+      - ELASTIC_PASS
+    networks:
+      - nevyn
+    ports:
+      - 5601:5601
+
+volumes:
+  prometheus:
+  grafana:
+  elasticsearch:
+
+networks:
+  nevyn:
+
+configs:
+  prometheus:
+    file: ./prometheus/prometheus.yml
+    name: prometheus-2024-11-09
+  prometheus-alert:
+    file: ./prometheus/alert.rules
+    name: prometheus-alert-2024-11-20-v1
+  alertmanager:
+    file: ./prometheus/alertmanager.yml
+    name: alertmanager-2024-11-20-v1
+  grafana-dashboard-provider:
+    file: ./grafana/dashboard-provider.yaml
+  grafana-dashboard-cadvisor:
+    file: ./grafana/dashboards/cadvisor.json
+  grafana-dashboard-windows:
+    file: ./grafana/dashboards/windows.json
+  grafana-dashboard-rhodry:
+    file: ./grafana/dashboards/rhodry.json
+    name: grafana-dashboard-rhodry-2025-01-18
+  grafana-dashboard-rhodry-topics:
+    file: ./grafana/dashboards/rhodry-topics.json
+  grafana-dashboard-biapi:
+    file: ./grafana/dashboards/biapi.json
+    name: grafana-dashboard-biapi-2024-02-29
+  grafana-dashboard-connect:
+    file: ./grafana/dashboards/rhodry-jmx-connect.json
+    name: grafana-dashboard-rhodry-jmx-connect-2024-07-10
+  grafana-config:
+    file: ./grafana/grafana.ini
+    name: grafana-config-2024-04-20-v1
+  grafana-ldap:
+    file: ./grafana/ldap.toml
+    name: grafana-ldap-2024-10-28-v9
+
+secrets:
+  BILDAP_PASS:
+    external: true
+  ELASTIC_PASS:
+    external: true

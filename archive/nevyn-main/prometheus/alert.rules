@@ -1,0 +1,14 @@
+groups:
+
+- name: airflow
+  rules:
+
+    # Alert if the Airflow scheduler heartbeat has not increased.
+    - alert: airflow_service_down
+      expr: increase(airflow_agg_scheduler_heartbeat[10m]) <= 0
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Airflow service down"
+        description: "Airflow scheduler or StatsD exporter is down."

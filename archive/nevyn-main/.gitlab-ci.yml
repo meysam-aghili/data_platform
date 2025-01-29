@@ -1,0 +1,117 @@
+stages:
+  - build-exporters
+  - deploy
+  - deploy-exporters
+
+x-deploy-linux-exporters: &deploy-linux-exporters
+  stage: deploy-exporters
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker stack deploy -c docker-compose.linux-exporters.yml --with-registry-auth nevyn
+
+build-exporter-sales:
+  stage: build-exporters
+  tags:
+    - nevyn-biapi
+  rules:
+    - changes:
+        - exporters/sales/**
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - cd exporters/sales
+    - source .env
+    - docker build -t ${CI_REGISTRY_IMAGE}/exporters/sales --build-arg DGPY_VERSION=${DGPY_VERSION} .
+    - docker push ${CI_REGISTRY_IMAGE}/exporters/sales
+
+build-exporter-biapi:
+  stage: build-exporters
+  tags:
+    - nevyn-biapi
+  rules:
+    - changes:
+        - exporters/biapi/**
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - cd exporters/biapi
+    - source .env
+    - docker build -t ${CI_REGISTRY_IMAGE}/exporters/biapi --build-arg DGPY_VERSION=${DGPY_VERSION} .
+    - docker push ${CI_REGISTRY_IMAGE}/exporters/biapi
+
+deploy-exporter-sales:
+  stage: deploy-exporters
+  tags:
+    - nevyn-biapi
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - cd exporters/sales
+    - source ../../compose_envs.sh
+    - docker stack deploy -c docker-compose.prod.yml --with-registry-auth nevyn
+
+deploy-exporter-biapi:
+  stage: deploy-exporters
+  tags:
+    - nevyn
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - cd exporters/biapi
+    - source ../../compose_envs.sh
+    - docker stack deploy -c docker-compose.prod.yml --with-registry-auth nevyn
+
+deploy:
+  stage: deploy
+  tags:
+    - nevyn
+  # rules:
+  #   - changes:
+  #     - grafana/**
+  #     - prometheus/**
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - source compose_envs.sh
+    - docker stack deploy -c docker-compose.prod.yml --with-registry-auth nevyn
+
+deploy-rhodry:
+  <<: *deploy-linux-exporters
+  tags:
+    - nevyn-rhodry
+
+deploy-rhodrylab:
+  <<: *deploy-linux-exporters
+  tags:
+    - nevyn-rhodrylab
+
+deploy-splunk:
+  <<: *deploy-linux-exporters
+  tags:
+    - nevyn-splunk
+
+deploy-bianalytics:
+  <<: *deploy-linux-exporters
+  tags:
+    - nevyn-bianalytics
+
+deploy-bilab:
+  <<: *deploy-linux-exporters
+  tags:
+    - nevyn-bilab
+
+deploy-biapi:
+  <<: *deploy-linux-exporters
+  tags:
+    - nevyn-biapi
+
+deploy-nightingale:
+  <<: *deploy-linux-exporters
+  tags:
+    - nevyn-nightingale
+
+deploy-nevyn:
+  <<: *deploy-linux-exporters
+  tags:
+    - nevyn

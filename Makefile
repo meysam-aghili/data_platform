@@ -46,4 +46,4 @@ deploy-viz:
 deploy: create-network deploy-db deploy-kafka deploy-viz
 
 remove-all-volumes:
-	docker volume rm $(docker volume ls -q)
+	docker volume rm $$(docker volume ls -q) && docker volume prune -f

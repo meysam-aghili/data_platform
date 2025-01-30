@@ -1,3 +1,7 @@
 docker swarm init
 printf "postgres" | docker secret create postgres_password -
 printf "grafana" | docker secret create grafana_password -
+
+curl -X POST -H "Content-Type: application/json" --data @./kafka_connect/connectors.json http://localhost:8083/connectors
+curl -s http://localhost:8083/connectors/source-postgres/status
+

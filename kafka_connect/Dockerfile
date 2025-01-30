@@ -12,6 +12,7 @@ RUN mkdir /usr/share/java/debezium; \
         wget https://repo1.maven.org/maven2/io/debezium/debezium-connector-${connector}/${DBZ_VERSION}/debezium-connector-${connector}-${DBZ_VERSION}-plugin.tar.gz; \
         tar -xf ./debezium-connector-${connector}-${DBZ_VERSION}-plugin.tar.gz; \
         mkdir /usr/share/java/debezium/debezium-connector-${connector}; \
+		mv ./debezium-connector-${connector}/*.jar /usr/share/java/debezium/debezium-connector-${connector}/; \
     done; \
     confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:${JDBC_CONNECTOR_VERSION} && \
     confluent-hub install --no-prompt confluentinc/kafka-connect-json-schema-converter:latest;

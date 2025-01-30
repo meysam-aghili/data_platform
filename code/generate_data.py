@@ -77,7 +77,7 @@ def insert_row_into_pg(database: str, table_name: str, columns: tuple, row: tupl
 def etl_log_data():
     while True:
         time.sleep(1)
-        table_name = "log_data"
+        table_name = "log.log_data"
         data = generate_log_row_data()
         columns = tuple(data.keys())
         row = tuple(data.values())
@@ -86,7 +86,7 @@ def etl_log_data():
 def etl_sensor_data():
     while True:
         time.sleep(1)
-        table_name = "sensor_data"
+        table_name = "iot.sensor_data"
         data = generate_sensor_row_data()
         columns = tuple(data.keys())
         row = tuple(data.values())
@@ -95,7 +95,7 @@ def etl_sensor_data():
 def etl_orders_data():
     while True:
         time.sleep(1)
-        table_name = "orders"
+        table_name = "sales.orders"
         data = generate_orders_row_data()
         columns = tuple(data.keys())
         row = tuple(data.values())
@@ -104,7 +104,7 @@ def etl_orders_data():
 def etl_customers_data():
     while True:
         time.sleep(1)
-        table_name = "customers"
+        table_name = "sales.customers"
         data = generate_customers_row_data()
         columns = tuple(data.keys())
         row = tuple(data.values())
@@ -113,7 +113,7 @@ def etl_customers_data():
 def etl_products_data():
     while True:
         time.sleep(1)
-        table_name = "products"
+        table_name = "sales.products"
         data = generate_products_row_data()
         columns = tuple(data.keys())
         row = tuple(data.values())
@@ -122,7 +122,7 @@ def etl_products_data():
 def etl_order_items_data():
     while True:
         time.sleep(1)
-        table_name = "order_items"
+        table_name = "sales.order_items"
         data = generate_order_items_row_data()
         columns = tuple(data.keys())
         row = tuple(data.values())
@@ -130,12 +130,16 @@ def etl_order_items_data():
 
 def create_pg_db():
     pg_exec_query(database="postgres", query="CREATE DATABASE sensors;", ignore_errors=True)
+    pg_exec_query(database="sensors", query="CREATE SCHEMA iot;", ignore_errors=True)
     pg_exec_query(database="postgres", query="CREATE DATABASE logs;", ignore_errors=True)
+    pg_exec_query(database="logs", query="CREATE SCHEMA log;", ignore_errors=True)
     pg_exec_query(database="postgres", query="CREATE DATABASE akrana;", ignore_errors=True)
+    pg_exec_query(database="akrana", query="CREATE SCHEMA sales;", ignore_errors=True)
+    
     pg_exec_query(
         database="sensors", 
         query="""
-        CREATE TABLE IF NOT EXISTS sensor_data
+        CREATE TABLE IF NOT EXISTS iot.sensor_data
         (
             sensor_id INTEGER,
             timestamp TIMESTAMP,
@@ -144,7 +148,7 @@ def create_pg_db():
     pg_exec_query(
         database="logs", 
         query="""
-        CREATE TABLE IF NOT EXISTS log_data
+        CREATE TABLE IF NOT EXISTS log.log_data
         (
             device_id INTEGER,
             log_level VARCHAR(50),
@@ -154,7 +158,7 @@ def create_pg_db():
     pg_exec_query(
         database="akrana", 
         query="""
-        CREATE TABLE IF NOT EXISTS customers
+        CREATE TABLE IF NOT EXISTS sales.customers
         (
             id INTEGER,
             first_name VARCHAR(100),
@@ -162,19 +166,19 @@ def create_pg_db():
             email VARCHAR(100),
             address TEXT
         );
-        CREATE TABLE IF NOT EXISTS products
+        CREATE TABLE IF NOT EXISTS sales.products
         (
             id INTEGER,
             name VARCHAR(100),
             description TEXT
         );
-        CREATE TABLE IF NOT EXISTS orders
+        CREATE TABLE IF NOT EXISTS sales.orders
         (
             id INTEGER,
             customer_id INTEGER,
             order_date TIMESTAMP
         );
-        CREATE TABLE IF NOT EXISTS order_items
+        CREATE TABLE IF NOT EXISTS sales.order_items
         (
             id INTEGER,
             order_id INTEGER,
@@ -187,35 +191,35 @@ def create_pg_db():
 def main():
     create_pg_db()
     threads = []
-    for i in range(5):
-        thread = threading.Thread(target=etl_sensor_data)
-        threads.append(thread)
-        thread.start()
+    # for i in range(5):
+    #     thread = threading.Thread(target=etl_sensor_data)
+    #     threads.append(thread)
+    #     thread.start()
    
-    for i in range(1):
-        thread = threading.Thread(target=etl_log_data)
-        threads.append(thread)
-        thread.start()
+    # for i in range(1):
+    #     thread = threading.Thread(target=etl_log_data)
+    #     threads.append(thread)
+    #     thread.start()
 
-    for i in range(5):
-        thread = threading.Thread(target=etl_customers_data)
-        threads.append(thread)
-        thread.start()
+    # for i in range(5):
+    #     thread = threading.Thread(target=etl_customers_data)
+    #     threads.append(thread)
+    #     thread.start()
 
-    for i in range(5):
-        thread = threading.Thread(target=etl_products_data)
-        threads.append(thread)
-        thread.start()
+    # for i in range(5):
+    #     thread = threading.Thread(target=etl_products_data)
+    #     threads.append(thread)
+    #     thread.start()
 
     for i in range(5):
         thread = threading.Thread(target=etl_orders_data)
         threads.append(thread)
         thread.start()
     
-    for i in range(5):
-        thread = threading.Thread(target=etl_order_items_data)
-        threads.append(thread)
-        thread.start()
+    # for i in range(5):
+    #     thread = threading.Thread(target=etl_order_items_data)
+    #     threads.append(thread)
+    #     thread.start()
 
     for thread in threads:
         thread.join()

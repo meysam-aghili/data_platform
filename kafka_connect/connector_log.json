@@ -1,0 +1,25 @@
+
+{
+	"name": "source-postgres-log-logs",
+	"config": {
+		"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+		"plugin.name": "pgoutput",
+		"slot.name" : "3",
+		"tasks.max": "1",
+		"database.hostname": "postgres",
+		"database.port": "5432",
+		"database.user": "postgres",
+		"database.password": "postgres",
+		"database.dbname" : "log",
+		"database.server.name": "mypg",
+		"database.whitelist": "log_data",
+		"topic.prefix": "logs",
+		"transforms": "route,ExtractField",
+		"transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
+		"transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
+		"transforms.route.replacement": "log.$2.$3",
+		"transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+		"transforms.ExtractField.field": "id",
+		"message.key.columns": "logs.logs.log_data:id"
+	}
+}

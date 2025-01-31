@@ -184,31 +184,31 @@ services:
         constraints:
           - node.hostname == ${HOSTNANME_01}
 
-  kafka-connect-02:
-    <<: *kafka-connect-common
-    hostname: kafka-connect-02
-    ports:
-      - 25072:25075
-    environment:
-      <<: *kafka-connect-envs
-      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-02
-    deploy:
-      placement:
-        constraints:
-          - node.hostname == ${HOSTNANME_02}
+  # kafka-connect-02:
+  #   <<: *kafka-connect-common
+  #   hostname: kafka-connect-02
+  #   ports:
+  #     - 25072:25075
+  #   environment:
+  #     <<: *kafka-connect-envs
+  #     CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-02
+  #   deploy:
+  #     placement:
+  #       constraints:
+  #         - node.hostname == ${HOSTNANME_02}
 
-  kafka-connect-03:
-    <<: *kafka-connect-common
-    hostname: kafka-connect-03
-    ports:
-      - 25073:25075
-    environment:
-      <<: *kafka-connect-envs
-      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-03
-    deploy:
-      placement:
-        constraints:
-          - node.hostname == ${HOSTNANME_03}
+  # kafka-connect-03:
+  #   <<: *kafka-connect-common
+  #   hostname: kafka-connect-03
+  #   ports:
+  #     - 25073:25075
+  #   environment:
+  #     <<: *kafka-connect-envs
+  #     CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-03
+  #   deploy:
+  #     placement:
+  #       constraints:
+  #         - node.hostname == ${HOSTNANME_03}
 
   kafka-schema-registry:
     image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}

@@ -1,7 +1,3 @@
-
-see if we can create all connectors in one json file
-change topic key value
-add all postgres data
 artin portainer
 artin kafka volumes
 see courses
@@ -11,30 +7,6 @@ search questions in notebook
 
 
 
-
-
-
-
-{
-	"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-	"database.user": "postgres",
-	"database.dbname": "akrana",
-	"topic.prefix": "sails",
-	"database.hostname": "postgres",
-	"database.password": "postgres",
-	"name": "source-postgres-orders-avro",
-	"database.server.id": "184054",
-	"database.server.name": "dbserver1",
-	"database.port": "5432",
-	"table.whitelist": "orders",
-	"transforms": "route,ExtractField",
-	"transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
-	"transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
-	"transforms.route.replacement": "$3",
-	"transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
-	"transforms.ExtractField.field": "id",
-	"message.key.columns": "test_db.sails.orders:id"
-}
 
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",

@@ -1,42 +1,48 @@
 version: "3.9"
 
 
-x-network: &network
-  networks:
-    - platform
-
 x-healthcheck-config: &healthcheck-config
   interval: 30s
   timeout: 10s
   retries: 3
-  start_period: 40s
+  # start_period: 180s
+
+x-network: &network
+  networks:
+    - platform
 
 x-deploy-on-front: &deploy-on-front
   deploy:
     replicas: 1
     placement:
       constraints:
-        - node.hostname == ${HOSTNAME_01}
+        - node.hostname == ${HOSTNANME_01}
 
 x-deploy-on-host-01: &deploy-on-host-01
   deploy:
     placement:
       constraints:
-        - node.hostname == ${HOSTNAME_01}
+        - node.hostname == ${HOSTNANME_01}
 x-deploy-on-host-02: &deploy-on-host-02
   deploy:
     placement:
       constraints:
-        - node.hostname == ${HOSTNAME_02}
+        - node.hostname == ${HOSTNANME_02}
 x-deploy-on-host-03: &deploy-on-host-03
   deploy:
     placement:
       constraints:
-        - node.hostname == ${HOSTNAME_03}
+        - node.hostname == ${HOSTNANME_03}
+
+x-kafka-healthcheck: &kafka-healthcheck
+  healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "${KAFKA_BOOTSTRAP_SERVERS}", "--list"]
+      <<: *healthcheck-config
 
 x-kafka-common: &kafka-common
   image: confluentinc/cp-kafka-prod:${CONFLUENT_VERSION}
   <<: *network
+  # <<: *kafka-healthcheck
 
 x-kafka-common-env: &kafka-common-env
   KAFKA_CONTROLLER_QUORUM_VOTERS: 1001@kafka-controller-01:${KAFKA_CONTROLLER_01_PORT},1002@kafka-controller-02:${KAFKA_CONTROLLER_02_PORT},1003@kafka-controller-03:${KAFKA_CONTROLLER_03_PORT} # in case of controller failure, these can vote for new leader controller
@@ -87,6 +93,7 @@ x-kafka-broker-envs: &kafka-broker-envs
 x-kafka-connect-common: &kafka-connect-common
   image: confluentinc/cp-kafka-connect-prod:${CONFLUENT_VERSION}
   <<: *network
+  # <<: *kafka-healthcheck
   volumes:
     - ./kafka_connect/kafka-connect-exporter.yml:/home/appuser/kafka-connect-exporter.yml
 x-kafka-connect-envs: &kafka-connect-envs
@@ -187,6 +194,7 @@ services:
 
   kafka-connect-01:
     <<: *kafka-connect-common
+    hostname: kafka-connect-01
     ports:
       - ${KAFKA_CONNECT_REST_PORT}:8083
       - 25071:25075 # metrics exporter
@@ -197,6 +205,7 @@ services:
 
   # kafka-connect-02:
   #   <<: *kafka-connect-common
+  #   hostname: kafka-connect-02
   #   ports:
   #     - 25072:25075 # metrics exporter
   #   environment:
@@ -206,6 +215,7 @@ services:
 
   # kafka-connect-03:
   #   <<: *kafka-connect-common
+  #   hostname: kafka-connect-03
   #   ports:
   #     - 25073:25075 # metrics exporter
   #   environment:
@@ -215,6 +225,8 @@ services:
 
   kafka-schema-registry:
     image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
+    <<: *network
+    <<: *deploy-on-front
     ports:
       - ${KAFKA_SCHEMA_REGISTRY_PORT}:8081
     environment:
@@ -222,14 +234,14 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
       SCHEMA_REGISTRY_SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: http
-    <<: *deploy-on-front
-    <<: *network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081"]
       <<: *healthcheck-config
 
   kafka-rest-proxy:
     image: confluentinc/cp-kafka-rest:${CONFLUENT_VERSION}
+    <<: *network
+    <<: *deploy-on-front
     ports:
       - ${KAFKA_REST_PROXY_PORT}:8082
     environment:
@@ -237,14 +249,14 @@ services:
       KAFKA_REST_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
       KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
       KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://kafka-schema-registry:8081'
-    <<: *deploy-on-front
-    <<: *network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082"]
       <<: *healthcheck-config
 
   kafka-ui:
     image: provectuslabs/kafka-ui:${KAFKA_UI_VERSION}
+    <<: *network
+    <<: *deploy-on-front
     ports:
       - ${KAFKA_UI_PORT}:8080
     environment:
@@ -256,30 +268,37 @@ services:
       KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: "http://kafka-connect-01:8083"
       KAFKA_CLUSTERS_0_SCHEMAREGISTRY: "http://kafka-schema-registry:8081"
       # KAFKA_CLUSTERS_0_KSQLDBSERVER: "http://ksqldb-01:8088"
-    <<: *deploy-on-front
-    <<: *network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      <<: *healthcheck-config
 
   kafka-schema-registry-ui:
     image: landoop/schema-registry-ui:${KAFKA_SCHEMA_REGISTRY_UI_VERSION}
+    <<: *network
+    <<: *deploy-on-front
     ports:
       - ${KAFKA_SCHEMA_REGISTRY_UI_PORT}:8000
     environment:
       SCHEMAREGISTRY_URL: http://kafka-schema-registry:8081
       PROXY: "true"
-    <<: *deploy-on-front
-    <<: *network
-    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      <<: *healthcheck-config
   
   kafka-connect-ui:
     image: landoop/kafka-connect-ui:${KAFKA_CONNECT_UI_VERSION}
+    <<: *network
+    <<: *deploy-on-front
     ports:
       - ${KAFKA_CONNECT_UI_PORT}:8000
     environment:
       CONNECT_URL: http://kafka-connect-01:8083
       PROXY: "true"
-    <<: *deploy-on-front
-    <<: *network
-    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      <<: *healthcheck-config
+
+
 #   ksqldb-01:
 #     image: ${CI_REGISTRY_IMAGE}/ksqldb:${KSQLDB_VERSION}
 #     hostname: ksqldb-01

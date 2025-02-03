@@ -20,20 +20,20 @@ x-healthcheck-config: &healthcheck-config
 services:
   postgres:
     image: postgres:${POSTGRES_VERSION}
+    ports:
+      - ${POSTGRES_PORT}:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
-    secrets:
-      - postgres_password
-    ports:
-      - ${POSTGRES_PORT}:5432
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./postgres/postgresql.conf:/etc/postgresql.conf
     command: ["postgres", "-c", "config_file=/etc/postgresql.conf"] # to avoid overlap with postgresql.conf file bug error
+    secrets:
+      - postgres_password
     user: postgres
-    <<: *network
     <<: *deploy-on-front
+    <<: *network
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost", "-p", "5432"]
       <<: *healthcheck-config
@@ -46,8 +46,8 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml
       - prometheus-data:/prometheus
-    <<: *network
     <<: *deploy-on-front
+    <<: *network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       <<: *healthcheck-config
@@ -58,8 +58,8 @@ services:
       - ${ALERTMANAGER_PORT}:9093
     volumes:
       - ./prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml
-    <<: *network
     <<: *deploy-on-front
+    <<: *network
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
       <<: *healthcheck-config

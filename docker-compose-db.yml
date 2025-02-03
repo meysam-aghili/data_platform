@@ -9,7 +9,7 @@ x-deploy-on-front: &deploy-on-front
     replicas: 1
     placement:
       constraints:
-        - node.hostname == ${HOSTNANME_01}
+        - node.hostname == ${HOSTNAME_01}
 
 x-healthcheck-config: &healthcheck-config
   interval: 30s

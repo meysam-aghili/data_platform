@@ -21,9 +21,19 @@ scrape_configs:
     params:
       family: ["queue_coarse_metrics"]
   
-  - job_name: 'kafka'
+  - job_name: 'kafka_jmx'
     static_configs:
-    - targets: ['kafka:7075']
+    - targets: [
+      'kafka-broker-01:27075',
+      'kafka-broker-02:27075',
+      'kafka-broker-03:27075',
+      'kafka-controller-01:26075',
+      'kafka-controller-02:26075',
+      'kafka-controller-03:26075',
+      'kafka-connect-01:25075',
+      'kafka-connect-02:25075',
+      'kafka-connect-03:25075',
+      ]
 
 rule_files:
   - alert-rules.yml

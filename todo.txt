@@ -10,9 +10,8 @@ kafka-rest be dard mikhore
 kafdrop ya kafka ui kodomesh?
 tedad partition haro chejuri mohasebe mikonid , orders chanta partition dare?
 
-exporters to prom
-portainer
 ksql
+test differenct crash scenarios
 sasl and security
 
 

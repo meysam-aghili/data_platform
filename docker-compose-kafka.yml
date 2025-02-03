@@ -54,7 +54,7 @@ x-kafka-controller-envs: &kafka-controller-envs
   KAFKA_PROCESS_ROLES: controller
   KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT # listener_name:security_protocol for communication encryption protocol
   KAFKA_HEAP_OPTS: '-Xms1g -Xmx1g' # set min max of heap memory size
-  EXTRA_ARGS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=26075:/home/appuser/kafka-controller-exporter.yml"
+  KAFKA_OPTS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=${KAFKA_CONTROLLER_METRICS_PORT}:/home/appuser/kafka-controller-exporter.yml"
 
 x-kafka-broker-common: &kafka-broker-common
   <<: *kafka-common
@@ -71,7 +71,7 @@ x-kafka-broker-envs: &kafka-broker-envs
   KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INT
   KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INT:PLAINTEXT,PLAINTEXT_EXT:PLAINTEXT,CONTROLLER:PLAINTEXT
   KAFKA_HEAP_OPTS: '-Xms${KAFKA_BROKER_HEAP_GBS}g -Xmx${KAFKA_BROKER_HEAP_GBS}g'
-  EXTRA_ARGS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=27075:/home/appuser/kafka-broker-exporter.yml"
+  KAFKA_OPTS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=${KAFKA_BROKER_METRICS_PORT}:/home/appuser/kafka-broker-exporter.yml"
   # KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INT:PLAINTEXT,PLAINTEXT_EXT:PLAINTEXT,SASL_EXT:SASL_PLAINTEXT,SASL_INT:SASL_PLAINTEXT
   # KAFKA_INTER_BROKER_LISTENER_NAME: SASL_INT
   # KAFKA_OPTS:
@@ -109,7 +109,7 @@ x-kafka-connect-envs: &kafka-connect-envs
   CONNECT_BUFFER_MEMORY: 268435456 # 4294967296 # 4gb max size to hold sink source data in memory
   CONNECT_MAX_REQUEST_SIZE: 67108864 # 64mb # max message size that a connector can transmit in kafka
   KAFKA_HEAP_OPTS: '-Xmx${KAFKA_CONNECT_HEAP_GBS}g -Xms${KAFKA_CONNECT_HEAP_GBS}g'
-  EXTRA_ARGS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=25075:/home/appuser/kafka-connect-exporter.yml" 
+  KAFKA_OPTS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=${KAFKA_CONNECT_METRICS_PORT}:/home/appuser/kafka-connect-exporter.yml" 
 
 services:
 
@@ -117,7 +117,6 @@ services:
     <<: *kafka-controller-common
     ports:
       - ${KAFKA_CONTROLLER_01_PORT}:${KAFKA_CONTROLLER_01_PORT}
-      - 26075:26075 # metrics exporter
     environment:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1001
@@ -128,7 +127,6 @@ services:
     <<: *kafka-controller-common
     ports:
       - ${KAFKA_CONTROLLER_02_PORT}:${KAFKA_CONTROLLER_02_PORT}
-      - 26074:26075 # metrics exporter
     environment:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1002
@@ -139,7 +137,6 @@ services:
     <<: *kafka-controller-common
     ports:
       - ${KAFKA_CONTROLLER_03_PORT}:${KAFKA_CONTROLLER_03_PORT}
-      - 26073:26075 # metrics exporter
     environment:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1003
@@ -149,47 +146,44 @@ services:
   kafka-broker-01:
     <<: *kafka-broker-common
     ports:
-      - 29091:29091 # external
-      - 27091:27091 # internal
-      - 27071:27075 # metrics exporter
+      - ${KAFKA_BROKER_01_EXT_PORT}:${KAFKA_BROKER_01_EXT_PORT}
+      - ${KAFKA_BROKER_01_INT_PORT}:${KAFKA_BROKER_01_INT_PORT}
     environment:
       <<: *kafka-broker-envs
       KAFKA_NODE_ID: 1
-      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:27091,PLAINTEXT_EXT://0.0.0.0:29091
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-01:27091,PLAINTEXT_EXT://${HOSTIP_01}:29091
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_01_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_01_EXT_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-01:${KAFKA_BROKER_01_INT_PORT},PLAINTEXT_EXT://${HOSTIP_01}:${KAFKA_BROKER_01_EXT_PORT}
     <<: *deploy-on-host-01
 
   kafka-broker-02:
     <<: *kafka-broker-common
     ports:
-      - 29092:29092 # external
-      - 27092:27092 # internal
-      - 27072:27075 # metrics exporter
+      - ${KAFKA_BROKER_02_EXT_PORT}:${KAFKA_BROKER_02_EXT_PORT}
+      - ${KAFKA_BROKER_02_INT_PORT}:${KAFKA_BROKER_02_INT_PORT}
     environment:
       <<: *kafka-broker-envs
       KAFKA_NODE_ID: 2
-      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:27092,PLAINTEXT_EXT://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-02:27092,PLAINTEXT_EXT://${HOSTIP_02}:29092
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_02_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_02_EXT_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-02:${KAFKA_BROKER_02_INT_PORT},PLAINTEXT_EXT://${HOSTIP_02}:${KAFKA_BROKER_02_EXT_PORT}
     <<: *deploy-on-host-02
 
   kafka-broker-03:
     <<: *kafka-broker-common
     ports:
-      - 29093:29093 # external
-      - 27093:27093 # internal
-      - 27073:27075 # metrics exporter
+      - ${KAFKA_BROKER_03_EXT_PORT}:${KAFKA_BROKER_03_EXT_PORT}
+      - ${KAFKA_BROKER_03_INT_PORT}:${KAFKA_BROKER_03_INT_PORT}
     environment:
       <<: *kafka-broker-envs
       KAFKA_NODE_ID: 3
-      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:27093,PLAINTEXT_EXT://0.0.0.0:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-03:27093,PLAINTEXT_EXT://${HOSTIP_03}:29093
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_03_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_03_EXT_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-03:${KAFKA_BROKER_03_INT_PORT},PLAINTEXT_EXT://${HOSTIP_03}:${KAFKA_BROKER_03_EXT_PORT}
     <<: *deploy-on-host-03
 
   kafka-connect-01:
     <<: *kafka-connect-common
+    hostname: kafka-connect-01
     ports:
       - ${KAFKA_CONNECT_REST_PORT}:8083
-      - 25071:25075 # metrics exporter
     environment:
       <<: *kafka-connect-envs
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-01
@@ -197,8 +191,7 @@ services:
 
   # kafka-connect-02:
   #   <<: *kafka-connect-common
-  #   ports:
-  #     - 25072:25075 # metrics exporter
+  #   hostname: kafka-connect-02
   #   environment:
   #     <<: *kafka-connect-envs
   #     CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-02
@@ -206,8 +199,7 @@ services:
 
   # kafka-connect-03:
   #   <<: *kafka-connect-common
-  #   ports:
-  #     - 25073:25075 # metrics exporter
+  #   hostname: kafka-connect-03
   #   environment:
   #     <<: *kafka-connect-envs
   #     CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-03

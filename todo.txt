@@ -1,11 +1,15 @@
-artin portainer
-artin kafka volumes
-see courses
-search questions in notebook
+aya port dakheli expose shode yek image baraye yek containeri ke ba compose file dg vali network yeksan oomade bala baze?
+	age are pas chra port metric exporter connect ro map kardi be biron?
+chra baazi jaha ye port ro 2bar avordi biron?
+artin kafka volumes chra yekie baraye controller ha va broker ha
+KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT mishe CONTROLLER:PLAINTEXT ro hazv kard?
 
 
-
-
+rest proxy che mikone
+port haye broker va controller vase chie
+exporters to prom
+kafka-ui metric port va baghie metric port haro sar bxnim
+order compose properties
 
 
 {

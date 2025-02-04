@@ -9,9 +9,27 @@ kafka-cli be dard mikhore
 kafka-rest be dard mikhore
 kafdrop ya kafka ui kodomesh?
 tedad partition haro chejuri mohasebe mikonid , orders chanta partition dare?
+age ye broker fail she replication factor dobare emal mishe? partition ha chi mishn?
+reconsilation chie
+get sample connector artin
+strategy consume haye mokhtalef mesle range ya sticky karbord dare?
+acks ro gozashti -1 yani chi age alle ykm tool nmikeshe?
+idempotence chie?
+az kafka transaction estefade kardi?
+data imbalance ro chejuri handle mikonid
+
+kafka-nikamooz
+clickhouse-nikamooz
+setup clickhouse
+add postgres data to clickhouse
+visual data using grafana, metabase, powerbi, tableau, supercet
+
+add logs to elk stack and visual
+add influx for time series data and visual
+add minio
+add spark
 
 ksql
-test differenct crash scenarios
 sasl and security
 
 

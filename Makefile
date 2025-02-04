@@ -43,7 +43,12 @@ deploy-viz:
 	docker stack deploy platform-visualizer --compose-file docker-compose-visualizer.prod.yml
 	rm docker-compose-visualizer.prod.yml
 
-deploy: create-network deploy-db deploy-kafka deploy-viz
+deploy-monitoring:
+	./compose_envs.sh docker-compose-monitoring.yml
+	docker stack deploy platform-monitoring --compose-file docker-compose-monitoring.prod.yml
+	rm docker-compose-monitoring.prod.yml
+
+deploy: create-network deploy-db deploy-kafka deploy-viz deploy-monitoring
 
 remove-all-volumes:
 	docker volume rm $$(docker volume ls -q) && docker volume prune -f

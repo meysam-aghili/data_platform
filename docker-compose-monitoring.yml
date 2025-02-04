@@ -1,0 +1,118 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+services:
+
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION}
+    ports:
+      - ${PROMETHEUS_PORT}:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml
+      - prometheus-data:/prometheus
+    <<: *deploy-on-front
+    <<: *network
+    extra_hosts:
+      - 'host-01:${HOSTIP_01}'
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      <<: *healthcheck-config
+
+  alertmanager:
+    image: prom/alertmanager:${ALERTMANAGER_VERSION}
+    ports:
+      - ${ALERTMANAGER_PORT}:9093
+    volumes:
+      - ./prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    <<: *deploy-on-front
+    <<: *network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      <<: *healthcheck-config
+
+  portainer:
+    image: portainer/portainer-ce:${PORTAINER_VERSION}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    ports:
+      - ${PORTAINER_UI_PORT}:9000
+    <<: *network
+    <<: *deploy-on-front
+
+  node-exporter:
+    image: node-exporter:${NODE_EXPORTER_VERSION}
+    deploy:
+      mode: global
+    ports:
+      - ${NODE_EXPORTER_PORT}:9100
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /:/host:ro,rslave
+    command: 
+      - '--path.rootfs=/host'
+      - '--path.procfs=/host/proc' 
+      - '--path.sysfs=/host/sys'
+      - --collector.filesystem.ignored-mount-points
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    <<: *network
+
+  cadvisor:
+    image: cadvisor:${CADVISOR_VERSION}
+    deploy:
+      mode: global
+    ports:
+      - ${CADVISOR_PORT}:8080
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    <<: *network
+
+volumes:
+  prometheus-data:
+    driver: local
+  portainer-data:
+    driver: local

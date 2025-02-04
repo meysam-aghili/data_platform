@@ -1,8 +1,18 @@
 version: "3.9"
 
+networks:
+  platform:
+    external: true
+
 x-network: &network
   networks:
     - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
 
 x-deploy-on-front: &deploy-on-front
   deploy:
@@ -11,11 +21,23 @@ x-deploy-on-front: &deploy-on-front
       constraints:
         - node.hostname == ${HOSTNAME_01}
 
-x-healthcheck-config: &healthcheck-config
-  interval: 30s
-  timeout: 10s
-  retries: 3
-  start_period: 40s
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
 
 services:
 
@@ -25,6 +47,7 @@ services:
       - ${GRAFANA_PORT}:3000
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
     environment:
       - GF_SECURITY_ADMIN_USER=grafana
       - GF_SECURITY_ADMIN_PASSWORD=grafana
@@ -35,22 +58,26 @@ services:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
       <<: *healthcheck-config
 
-  portainer:
-    image: portainer/portainer-ce:${PORTAINER_VERSION}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer-data:/data
+  kibana:
+    image: kibana:${KIBANA_VERSION}
     ports:
-      - ${PORTAINER_UI_PORT}:9000
+      - ${KIBANA_PORT}:5601
+    entrypoint: |
+      sh -c "
+      export ELASTIC_PASSWORD=$$(cat /run/secrets/elasticsearch_password) &&
+      /bin/tini -- /usr/local/bin/kibana-docker --elasticsearch.password=$$ELASTIC_PASSWORD --elasticsearch.username=elastic --elasticsearch.hosts=http://elasticsearch:${ELASTICSEARCH_PORT} --host=0.0.0.0
+      "
+    secrets:
+      - elasticsearch_password
     <<: *network
     <<: *deploy-on-front
-      
+    
+secrets:
+  postgres_password:
+    external: true
+  elasticsearch_password:
+    external: true
+
 volumes:
   grafana-data:
     driver: local
-  portainer-data:
-    driver: local
-
-networks:
-  platform:
-    external: true

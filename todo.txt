@@ -24,10 +24,13 @@ che datai too click hosue ngeah midarid ? khame orders ya agg data of orders?
 ttl table ha mamoln chejuri mizarid? maslan table orders
 optimize table final ?
 index_granularity option ?
-
+primary key vs order by deatil?
+explain indexes=1 ?
+Adding a projection to our existing table. what is that?
+ALL DDL AND QUERY TIPS
 
 setup clickhouse
-	https://clickhouse.com/docs/en/guides/best-practices/sparse-primary-indexes
+	https://clickhouse.com/docs/en/materialized-view
 	https://github.com/ClickHouse/examples/blob/main/docker-compose-recipes/README.md
 	https://clickhouse.com/docs/en/use-cases/observability/introduction
 

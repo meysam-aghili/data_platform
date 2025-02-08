@@ -28,9 +28,11 @@ primary key vs order by deatil?
 explain indexes=1 ?
 Adding a projection to our existing table. what is that?
 ALL DDL AND QUERY TIPS
+data skipping index?
 
 setup clickhouse
-	https://clickhouse.com/docs/en/materialized-view
+ 	https://clickhouse.com/docs/en/engines/table-engines
+	https://clickhouse.com/docs/en/architecture/introduction
 	https://github.com/ClickHouse/examples/blob/main/docker-compose-recipes/README.md
 	https://clickhouse.com/docs/en/use-cases/observability/introduction
 

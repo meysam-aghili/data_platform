@@ -84,11 +84,31 @@ services:
     <<: *deploy-on-front
     <<: *network
 
+  minio:
+    image: minio/minio:${MINIO_VERSION}
+    ports:
+      - 10000:10000
+      - 10001:10001
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+      # - MINIO_ROOT_PASSWORD_FILE=/run/secrets/minio_password
+    # secrets:
+      # - minio_password
+    command: server --address 0.0.0.0:10000 --console-address 0.0.0.0:10001 /data
+    <<: *deploy-on-host-01
+    <<: *network
+    # healthcheck:
+      # test: ["CMD", "mc", "ready", "myminio"]
+      # <<: *healthcheck-config
+
 secrets:
   postgres_password:
     external: true
   elasticsearch_password:
     external: true
+  # minio_password:
+    # external: true
 
 volumes:
   postgres-data:

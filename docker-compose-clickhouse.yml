@@ -39,23 +39,60 @@ x-deploy-on-host-03: &deploy-on-host-03
         
 ##################################################################
 
+x-clickhouse-node-common: &clickhouse-node-common
+  image: 'clickhouse/clickhouse-server:${CLICKHOUSE_NODE_VERSION}'
+  <<: *network
+
+x-clickhouse-keeper-common: &clickhouse-keeper-common
+  image: 'clickhouse/clickhouse-keeper:${CLICKHOUSE_KEEPER_VERSION}'
+  <<: *network
+
 services:
-  clickhouse-broker-01:
-    image: 'clickhouse/clickhouse-server:${CLICKHOUSE_BROKER_VERSION}'
-    volumes:
-      - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/config.xml
-      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml
+
+  clickhouse-node-01:
+    <<: *clickhouse-node-common
     ports:
       - 8123:8123
       - 9000:9000
+    volumes:
+      - ./clickhouse/config/clickhouse-node-01/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./clickhouse/config/users.xml:/etc/clickhouse-server/users.d/users.xml
     <<: *deploy-on-host-01
-    <<: *network
+  
+  clickhouse-node-02:
+    <<: *clickhouse-node-common
+    volumes:
+      - ./clickhouse/config/clickhouse-node-02/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ./clickhouse/config/users.xml:/etc/clickhouse-server/users.d/users.xml
+    <<: *deploy-on-host-02
 
   clickhouse-keeper-01:
-    image: 'clickhouse/clickhouse-keeper:${CLICKHOUSE_KEEPER_VERSION}'
-    volumes:
-      - ./clickhouse/keeper_config.xml:/etc/clickhouse-keeper/keeper_config.xml
+    <<: *clickhouse-keeper-common
     ports:
       - 9181:9181
+    volumes:
+      - ./clickhouse/config/clickhouse-keeper-01/keeper_config.xml:/etc/clickhouse-keeper/keeper_config.xml
     <<: *deploy-on-host-01
+  
+  clickhouse-keeper-02:
+    <<: *clickhouse-keeper-common
+    volumes:
+      - ./clickhouse/config/clickhouse-keeper-02/keeper_config.xml:/etc/clickhouse-keeper/keeper_config.xml
+    <<: *deploy-on-host-02
+
+  clickhouse-keeper-03:
+    <<: *clickhouse-keeper-common
+    volumes:
+      - ./clickhouse/config/clickhouse-keeper-03/keeper_config.xml:/etc/clickhouse-keeper/keeper_config.xml
+    <<: *deploy-on-host-03
+
+  clickhouse-proxy:
+    image: contentsquareplatform/chproxy:${CLICKHOUSE_CHPROXY_VERSION}
+    ports:
+      # - "443:443"
+      - "8010:80"
+    volumes:
+      - ./clickhouse/config/chproxy/config.yml:/opt/config.yml
+    command: [-config, /opt/config.yml]
     <<: *network
+    <<: *deploy-on-host-01

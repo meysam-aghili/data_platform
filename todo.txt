@@ -31,15 +31,13 @@ ALL DDL AND QUERY TIPS
 data skipping index?
 projection?
 az aggmergetree estefade mikonid? ya hamon mergetree mizanid va roosh query agg mizanid
+chanta broker node va keeper node darid? chanta sahrd chanta replica darid?
 
 
+fix create table on cluster bug
 setup clickhouse
- 	https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/replication
-	https://clickhouse.com/docs/en/architecture/introduction
-	https://github.com/ClickHouse/examples/blob/main/docker-compose-recipes/README.md
 	https://clickhouse.com/docs/en/use-cases/observability/introduction
-
-add postgres data to clickhouse
+add postgres data to clickhouse based on best practices
 visual data using grafana, metabase, powerbi, tableau, supercet
 
 add logs to elk stack and visual
@@ -56,18 +54,7 @@ sasl and security
 
 
 
-SELECT
-    part_type,
-    path,
-    formatReadableQuantity(rows) AS rows,
-    formatReadableSize(data_uncompressed_bytes) AS data_uncompressed_bytes,
-    formatReadableSize(data_compressed_bytes) AS data_compressed_bytes,
-    formatReadableSize(primary_key_bytes_in_memory) AS primary_key_bytes_in_memory,
-    marks,
-    formatReadableSize(bytes_on_disk) AS bytes_on_disk
-FROM system.parts
-WHERE (table = 'hits_UserID_URL') AND (active = 1)
-FORMAT Vertical;
+
 
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",

@@ -48,7 +48,12 @@ deploy-monitoring:
 	docker stack deploy platform-monitoring --compose-file docker-compose-monitoring.prod.yml
 	rm docker-compose-monitoring.prod.yml
 
-deploy: create-network deploy-db deploy-kafka deploy-viz deploy-monitoring
+deploy-clickhouse:
+	./compose_envs.sh docker-compose-clickhouse.yml
+	docker stack deploy platform-clickhouse --compose-file docker-compose-clickhouse.prod.yml
+	rm docker-compose-clickhouse.prod.yml
+
+deploy: create-network deploy-db deploy-kafka deploy-viz deploy-monitoring deploy-clickhouse
 
 remove-all-volumes:
 	docker volume rm $$(docker volume ls -q) && docker volume prune -f

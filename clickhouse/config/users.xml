@@ -21,6 +21,14 @@
             <show_named_collections>1</show_named_collections>
             <show_named_collections_secrets>1</show_named_collections_secrets>
         </default>
+		<clickhouse>
+            <password>clickhouse</password>
+            <profile>default</profile>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <quota>default</quota>
+        </clickhouse>
     </users>
     <quotas>
         <default>

@@ -24,17 +24,16 @@
     <remote_servers>
         <cluster_nesaj>
             <shard>
+                <internal_replication>true</internal_replication>
                 <replica>
                     <host>clickhouse-node-01</host>
                     <port>9000</port>
                 </replica>
-            </shard>
-            <shard>
                 <replica>
                     <host>clickhouse-node-02</host>
                     <port>9000</port>
                 </replica>
-            </shard>
+			</shard>
         </cluster_nesaj>
     </remote_servers>
     <zookeeper>
@@ -54,6 +53,7 @@
     <macros>
         <shard>01</shard>
         <replica>01</replica>
+		<cluster>cluster_nesaj</cluster>
     </macros>
    <storage_configuration>
         <disks>

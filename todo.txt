@@ -22,19 +22,10 @@ data imbalance ro chejuri handle mikonid
 -------CLICKHOUSE QA
 che datai too click hosue ngeah midarid ? khame orders ya agg data of orders?
 ttl table ha mamoln chejuri mizarid? maslan table orders
-optimize table final ?
-index_granularity option ? index types?
-primary key vs order by deatil?
-explain indexes=1 ?
-Adding a projection to our existing table. what is that?
-ALL DDL AND QUERY TIPS
-data skipping index?
-projection?
 az aggmergetree estefade mikonid? ya hamon mergetree mizanid va roosh query agg mizanid
 chanta broker node va keeper node darid? chanta sahrd chanta replica darid?
 
-
-fix create table on cluster bug
+data skipping index?
 setup clickhouse
 	https://clickhouse.com/docs/en/use-cases/observability/introduction
 add postgres data to clickhouse based on best practices
@@ -44,9 +35,7 @@ add logs to elk stack and visual
 add influx for time series data and visual
 add minio
 add spark
-
 test dagster
-
 ksql
 sasl and security
 

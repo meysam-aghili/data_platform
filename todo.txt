@@ -18,6 +18,7 @@ acks ro gozashti -1 yani chi age alle ykm tool nmikeshe?
 idempotence chie?
 az kafka transaction estefade kardi?
 data imbalance ro chejuri handle mikonid
+image ksqldb ksqldb-server ksql-server cp-ksqldb which one ?
 
 -------CLICKHOUSE QA
 che datai too click hosue ngeah midarid ? khame orders ya agg data of orders?
@@ -25,10 +26,9 @@ ttl table ha mamoln chejuri mizarid? maslan table orders
 az aggmergetree estefade mikonid? ya hamon mergetree mizanid va roosh query agg mizanid
 chanta broker node va keeper node darid? chanta sahrd chanta replica darid?
 
-data skipping index?
-setup clickhouse
-	https://clickhouse.com/docs/en/use-cases/observability/introduction
+
 add postgres data to clickhouse based on best practices
+	test pg connector
 visual data using grafana, metabase, powerbi, tableau, supercet
 
 add logs to elk stack and visual
@@ -41,8 +41,58 @@ sasl and security
 
 
 
+CREATE DATABASE shop;
 
+CREATE TABLE shop.users
+(
+    user_id UInt32,
+    username String,
+    account_type String,
+    updated_at DateTime,
+    created_at DateTime,
+    kafka_time Nullable(DateTime),
+    kafka_offset UInt64
+)
+ENGINE = ReplacingMergeTree
+ORDER BY (user_id, updated_at)
+SETTINGS index_granularity = 8192
 
+CREATE DATABASE kafka_shop;
+
+CREATE TABLE kafka_shop.kafka__users
+(
+    user_id UInt32,
+    username String,
+    account_type String,
+    updated_at UInt64,
+    created_at UInt64
+)
+ENGINE = Kafka
+SETTINGS kafka_broker_list = 'broker:29092',
+kafka_topic_list = 'shop.public.users',
+kafka_group_name = 'clickhouse',
+kafka_format = 'AvroConfluent',
+format_avro_schema_registry_url='http://schema-registry:8081';
+
+CREATE MATERIALIZED VIEW kafka_shop.consumer__users TO shop.users
+(
+    user_id UInt32,
+    username String,
+    account_type String,
+    updated_at DateTime,
+    created_at DateTime,
+    kafka_time Nullable(DateTime),
+    kafka_offset UInt64
+) AS
+SELECT
+    user_id,
+    username,
+    account_type,
+    toDateTime(updated_at / 1000000) AS updated_at,
+    toDateTime(created_at / 1000000) AS created_at,
+    _timestamp AS kafka_time,
+    _offset AS kafka_offset
+FROM kafka_shop.kafka__users;
 
 
 {

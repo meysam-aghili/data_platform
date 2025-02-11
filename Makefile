@@ -22,9 +22,6 @@ build-kafka-connect:
 
 build: build-kafka build-kafka-connect
 
-testt:
-	./compose_envs.sh
-
 create-network:
 	docker network create --driver overlay --scope swarm --attachable platform || echo "network already exists. skipping."
 
@@ -57,3 +54,19 @@ deploy: create-network deploy-db deploy-kafka deploy-viz deploy-monitoring deplo
 
 remove-all-volumes:
 	docker volume rm $$(docker volume ls -q) && docker volume prune -f
+
+create-kafka-connectors:
+	./kafka_connect/create_connectors.sh d
+
+setup-pg-kafka:
+	python ./postgres/generate_data.py -initdb
+	create-kafka-connectors
+
+create-secrets:
+	printf "postgres" | docker secret create postgres_password -
+	printf "grafana" | docker secret create grafana_password -
+	$ printf "minio" | docker secret create minio_password -
+	printf "elasticsearch" | docker secret create elasticsearch_password -
+
+docker-swarm:
+	docker swarm init

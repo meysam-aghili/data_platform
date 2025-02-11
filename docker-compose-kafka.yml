@@ -273,37 +273,37 @@ services:
     <<: *deploy-on-front
     <<: *network
     
-  ksqldb-01:
-    image: ksqldb:${KSQLDB_VERSION}
-    hostname: ksqldb-01
-    ports:
-      - ${KSQLDB_PORT}:8088
-    environment:
-      KSQL_KSQL_SERVICE_ID: ksqldb
-      KSQL_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
-      KSQL_KSQL_SINK_REPLICAS: 3
-      KSQL_KSQL_STREAMS_REPLICATION_FACTOR: 1
-      KSQL_KSQL_INTERNAL_TOPIC_REPLICAS: 3
-      KSQL_KSQL_STREAMS_STATE_DIR: /data/ksqldb/
-      KSQL_KSQL_STREAMS_AUTO_OFFSET_RESET: latest
-      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
-      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
-      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://kafka-schema-registry:8081
-      KSQL_KSQL_CONNECT_URL: http://kafka-connect-01:8083
-      KSQL_LISTENERS: http://0.0.0.0:8088
-      KSQL_KSQL_ADVERTISED_LISTENER: http://ksqldb-01:8088
-    # volumes:
-    #   - ksqldb-01-data:/data/ksqldb/
-    <<: *network
-    <<: *deploy-on-host-01
-    
-  ksqldb-cli:
-    image: ksqldb:${KSQLDB_VERSION}
-    <<: *network
-    <<: *deploy-on-front
-    command: ["ksql", "http://ksqldb-01:8088"]
-    stdin_open: true
-    tty: true
+  # ksqldb-01:
+  #   image: ksqldb:${KSQLDB_VERSION} # confluentinc/cp-ksql-server:${KSQL_VERSION} confluentinc/ksqldb-server:${KSQL_VERSION}
+  #   hostname: ksqldb-01
+  #   ports:
+  #     - ${KSQLDB_PORT}:8088
+  #   environment:
+  #     KSQL_KSQL_SERVICE_ID: ksqldb
+  #     KSQL_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+  #     KSQL_KSQL_SINK_REPLICAS: 3
+  #     KSQL_KSQL_STREAMS_REPLICATION_FACTOR: 1
+  #     KSQL_KSQL_INTERNAL_TOPIC_REPLICAS: 3
+  #     KSQL_KSQL_STREAMS_STATE_DIR: /data/ksqldb/
+  #     KSQL_KSQL_STREAMS_AUTO_OFFSET_RESET: latest
+  #     KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+  #     KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+  #     KSQL_KSQL_SCHEMA_REGISTRY_URL: http://kafka-schema-registry:8081
+  #     KSQL_KSQL_CONNECT_URL: http://kafka-connect-01:8083
+  #     KSQL_LISTENERS: http://0.0.0.0:8088
+  #     KSQL_KSQL_ADVERTISED_LISTENER: http://ksqldb-01:8088
+  #   # volumes:
+  #   #   - ksqldb-01-data:/data/ksqldb/
+  #   <<: *network
+  #   <<: *deploy-on-host-01
+
+  # ksqldb-cli:
+  #   image: confluentinc/cp-ksql-cli:${KSQLDB_CLI_VERSION}
+  #   <<: *network
+  #   <<: *deploy-on-front
+  #   command: ["ksql", "http://ksqldb-01:8088"]
+  #   sentrypoint: /bin/sh
+  #   tty: true
   
 # volumes:
 #   kafka-broker-data:

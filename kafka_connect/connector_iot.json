@@ -1,10 +1,9 @@
-
 {
 	"name": "source-postgres-iot-sensors",
 	"config": {
 		"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
 		"plugin.name": "pgoutput",
-		"slot.name" : "2",
+		"slot.name" : "debezium_2",
 		"tasks.max": "1",
 		"database.hostname": "postgres",
 		"database.port": "5432",
@@ -12,14 +11,18 @@
 		"database.password": "postgres",
 		"database.dbname" : "iot",
 		"database.server.name": "mypg",
-		"database.whitelist": "sensor_data",
-		"topic.prefix": "sensors",
-		"transforms": "route,ExtractField",
-		"transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
-		"transforms.route.regex": "([^.]+)\\.([^.]+)\\.([^.]+)",
-		"transforms.route.replacement": "iot.$2.$3",
+		"table.include.list": "sensors.sensor_data",
+		"topic.prefix": "pg.iot",
+		"transforms": "ExtractField",
 		"transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
 		"transforms.ExtractField.field": "id",
-		"message.key.columns": "sensors.sensors.sensor_data:id"
+		"tombstones.on.delete": "false",
+		"decimal.handling.mode": "double",
+		"topic.creation.default.cleanup.policy": "delete",
+        "topic.creation.default.partitions": "1",
+        "topic.creation.default.replication.factor": "1",
+        "topic.creation.default.retention.ms": "604800000",
+        "topic.creation.enable": "true",
+		"snapshot.mode": "initial"
 	}
 }

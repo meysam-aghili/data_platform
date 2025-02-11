@@ -58,9 +58,10 @@ remove-all-volumes:
 create-kafka-connectors:
 	./kafka_connect/create_connectors.sh d
 
-setup-pg-kafka:
+setup-pg-kafka-clickhouse:
 	python ./postgres/generate_data.py -initdb
 	create-kafka-connectors
+	python ./clickhouse/minio_client.py
 
 create-secrets:
 	printf "postgres" | docker secret create postgres_password -

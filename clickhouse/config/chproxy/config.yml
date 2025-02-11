@@ -10,9 +10,9 @@ users:
     password: "clickhouse_chproxy"
     to_cluster: 'cluster_nesaj'
     to_user: 'clickhouse'
-    max_concurrent_queries: 100
-    max_execution_time: 30s
-    requests_per_minute: 10
+    # max_concurrent_queries: 100
+    # max_execution_time: 30s
+    # requests_per_minute: 10
     # Allow `CORS` requests for `tabix`.
     allow_cors: true
 clusters:

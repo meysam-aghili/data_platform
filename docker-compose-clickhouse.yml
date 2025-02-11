@@ -95,6 +95,7 @@ services:
 
   clickhouse-proxy:
     image: contentsquareplatform/chproxy:${CLICKHOUSE_CHPROXY_VERSION}
+    hostname: clickhouse-proxy
     ports:
       # - 443:443
       - ${CLICKHOUSE_PROXY_PORT}:80

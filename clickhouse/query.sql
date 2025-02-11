@@ -1,26 +1,20 @@
--- Active: 1739199614877@@172.20.65.42@8122@default
+-- Active: 1739199614877@@172.20.65.42@8122@nesaj
 
-SELECT *
-FROM system.clusters
+SELECT * FROM system.clusters;
 
-DROP DATABASE IF EXISTS test ON CLUSTER 'cluster_nesaj';
-CREATE DATABASE test ON CLUSTER 'cluster_nesaj';
+DROP DATABASE IF EXISTS nesaj ON CLUSTER 'cluster_nesaj';
+CREATE DATABASE nesaj ON CLUSTER 'cluster_nesaj';
 
-Drop TABLE if EXISTS test.my_table ON CLUSTER 'cluster_nesaj';
-CREATE TABLE IF NOT EXISTS test.my_table ON CLUSTER 'cluster_nesaj'(
+Drop TABLE if EXISTS nesaj.sales_orders ON CLUSTER 'cluster_nesaj';
+CREATE TABLE IF NOT EXISTS nesaj.sales_orders ON CLUSTER 'cluster_nesaj'(
     id UInt32,
-    name String,
-    timestamp DateTime
-) ENGINE = ReplicatedMergeTree('/clickhouse/tables/{database}/my_table', '{replica}')
-PARTITION BY toYYYYMM(timestamp)
-ORDER BY (id, timestamp)
-SETTINGS storage_policy = 's3_main';
+    customer_id UInt32,
+    order_date UInt32
+) ENGINE = ReplicatedMergeTree('/clickhouse/tables/{database}/sales_orders', '{replica}')
+PARTITION BY toYYYYMM(order_date)
+ORDER BY (customer_id, id);
 
-
-INSERT into test.my_table VALUES(1, 'meysam', now())
-
-select * from test.my_table
-
+select * from nesaj.sales_orders;
 
 SELECT
 	disk_name,

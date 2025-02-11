@@ -19,16 +19,21 @@ idempotence chie?
 az kafka transaction estefade kardi?
 data imbalance ro chejuri handle mikonid
 image ksqldb ksqldb-server ksql-server cp-ksqldb which one ?
+deadletterqueue darid?
 
 -------CLICKHOUSE QA
 che datai too click hosue ngeah midarid ? khame orders ya agg data of orders?
 ttl table ha mamoln chejuri mizarid? maslan table orders
 az aggmergetree estefade mikonid? ya hamon mergetree mizanid va roosh query agg mizanid
 chanta broker node va keeper node darid? chanta sahrd chanta replica darid?
+az kafka engine ya sink connector?
 
-
+--------------------------------------
 add postgres data to clickhouse based on best practices
-	test pg connector
+	why clickhouse sink connector does not work
+    create clickhouse tables
+    run connect
+https://clickhouse.com/docs/en/operations/named-collections#storing-named-collections-in-configuration-files
 visual data using grafana, metabase, powerbi, tableau, supercet
 
 add logs to elk stack and visual
@@ -40,6 +45,9 @@ ksql
 sasl and security
 
 
+---------------------------
+
+"keeperOnCluster": ""
 
 CREATE DATABASE shop;
 

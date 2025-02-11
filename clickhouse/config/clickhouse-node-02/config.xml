@@ -55,7 +55,7 @@
         <replica>02</replica>
 		<cluster>cluster_nesaj</cluster>
     </macros>
-   <storage_configuration>
+   <!-- <storage_configuration>
         <disks>
             <s3>
                 <type>s3</type>
@@ -81,7 +81,7 @@
                 </volumes>
             </s3_main>
         </policies>
-    </storage_configuration>
+    </storage_configuration> -->
     <backups>
         <allowed_disk>s3</allowed_disk>
     </backups>

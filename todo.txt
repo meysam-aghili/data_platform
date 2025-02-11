@@ -34,6 +34,7 @@ add postgres data to clickhouse based on best practices
     create clickhouse tables
     run connect
 https://clickhouse.com/docs/en/operations/named-collections#storing-named-collections-in-configuration-files
+remove clickhouse connector and install it via confluent install command
 visual data using grafana, metabase, powerbi, tableau, supercet
 
 add logs to elk stack and visual

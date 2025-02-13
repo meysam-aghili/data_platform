@@ -60,29 +60,29 @@ services:
       test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost", "-p", "5432"]
       <<: *healthcheck-config
 
-  elasticsearch:
-    image: elasticsearch:${ELASTICSEARCH_VERSION}
-    ports:
-      - ${ELASTICSEARCH_PORT}:9200
-    environment:
-      ES_JAVA_OPTS: "-Xms4g -Xmx4g"
-      discovery.type: single-node
-      cluster.name: nevyn
-      network.host: 0.0.0.0
-      xpack.license.self_generated.type: basic
-      xpack.security.enabled: "true"
-      xpack.monitoring.collection.enabled: "true"
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    secrets:
-      - elasticsearch_password
-    entrypoint: |
-      sh -c "
-      export ELASTIC_PASSWORD=$$(cat /run/secrets/elasticsearch_password) &&
-      /bin/tini -- /usr/local/bin/docker-entrypoint.sh eswrapper
-      "
-    <<: *deploy-on-front
-    <<: *network
+  # elasticsearch:
+  #   image: elasticsearch:${ELASTICSEARCH_VERSION}
+  #   ports:
+  #     - ${ELASTICSEARCH_PORT}:9200
+  #   environment:
+  #     ES_JAVA_OPTS: "-Xms4g -Xmx4g"
+  #     discovery.type: single-node
+  #     cluster.name: nevyn
+  #     network.host: 0.0.0.0
+  #     xpack.license.self_generated.type: basic
+  #     xpack.security.enabled: "true"
+  #     xpack.monitoring.collection.enabled: "true"
+  #   volumes:
+  #     - elasticsearch-data:/usr/share/elasticsearch/data
+  #   secrets:
+  #     - elasticsearch_password
+  #   entrypoint: |
+  #     sh -c "
+  #     export ELASTIC_PASSWORD=$$(cat /run/secrets/elasticsearch_password) &&
+  #     /bin/tini -- /usr/local/bin/docker-entrypoint.sh eswrapper
+  #     "
+  #   <<: *deploy-on-front
+  #   <<: *network
 
   minio:
     image: minio/minio:${MINIO_VERSION}
@@ -105,13 +105,13 @@ services:
 secrets:
   postgres_password:
     external: true
-  elasticsearch_password:
-    external: true
+  # elasticsearch_password:
+  #   external: true
   # minio_password:
     # external: true
 
 volumes:
   postgres-data:
     driver: local
-  elasticsearch-data:
-    driver: local
+  # elasticsearch-data:
+  #   driver: local

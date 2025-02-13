@@ -1,20 +1,67 @@
--- Active: 1739199614877@@172.20.65.42@8122@nesaj
+-- Active: 1730722459444@@172.20.65.42@8123@nesaj
 
 SELECT * FROM system.clusters;
 
 DROP DATABASE IF EXISTS nesaj ON CLUSTER 'cluster_nesaj';
 CREATE DATABASE nesaj ON CLUSTER 'cluster_nesaj';
 
-Drop TABLE if EXISTS nesaj.sales_orders ON CLUSTER 'cluster_nesaj';
-CREATE TABLE IF NOT EXISTS nesaj.sales_orders ON CLUSTER 'cluster_nesaj'(
-    id UInt32,
-    customer_id UInt32,
-    order_date UInt32
-) ENGINE = ReplicatedMergeTree('/clickhouse/tables/{database}/sales_orders', '{replica}')
+--------------------------------------------------------------------------------------------------------
+
+Drop TABLE if EXISTS nesaj.orders ON CLUSTER 'cluster_nesaj';
+CREATE TABLE IF NOT EXISTS nesaj.orders ON CLUSTER 'cluster_nesaj'
+(
+    id Int32,
+    customer_id Int32,
+    order_date TIMESTAMP
+) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/{database}/orders', '{replica}')
 PARTITION BY toYYYYMM(order_date)
 ORDER BY (customer_id, id);
 
-select * from nesaj.sales_orders;
+--------------------------
+
+Drop TABLE if EXISTS nesaj.products ON CLUSTER 'cluster_nesaj';
+CREATE TABLE IF NOT EXISTS nesaj.products ON CLUSTER 'cluster_nesaj'
+(
+    id Int32,
+    name String,
+    description String
+) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/{database}/products', '{replica}')
+ORDER BY (id);
+
+--------------------------
+
+Drop TABLE if EXISTS nesaj.customers ON CLUSTER 'cluster_nesaj';
+CREATE TABLE IF NOT EXISTS nesaj.customers ON CLUSTER 'cluster_nesaj'
+(
+    id Int32,
+    first_name String,
+    last_name String,
+    email String,
+    address String
+) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/{database}/customers', '{replica}')
+ORDER BY (id);
+
+--------------------------
+
+Drop TABLE if EXISTS nesaj.order_items ON CLUSTER 'cluster_nesaj';
+CREATE TABLE IF NOT EXISTS nesaj.order_items ON CLUSTER 'cluster_nesaj'
+(
+    id Int32,
+    order_id Int32,
+    product_id Int32,
+    quantity Int32,
+    unit_price Int32,
+    price Int32
+) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/{database}/order_items', '{replica}')
+ORDER BY (product_id,order_id,id
+
+select * from nesaj.products;
+select * from nesaj.orders;
+select * from nesaj.customers;);
+select * from nesaj.order_items;
+
+
+--------------------------------------------------------------------------------------------------------------
 
 SELECT
 	disk_name,
@@ -29,3 +76,6 @@ SELECT
 	*
 FROM system.parts
 WHERE (table = 'my_table')
+
+SET send_logs_level='trace'
+SET stream_like_engine_allow_direct_select = 1

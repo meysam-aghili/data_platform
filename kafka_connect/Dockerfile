@@ -5,7 +5,6 @@ ARG JDBC_CONNECTOR_VERSION
 ENV DBZ_VERSION=${DEBEZIUM_VERSION}
 RUN wget https://repo.maven.apache.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/1.0.0/jmx_prometheus_javaagent-1.0.0.jar
 WORKDIR /tmp
-COPY clickhouse-kafka-connect-v1.2.6-confluent.jar .
 RUN mkdir /usr/share/java/debezium; \
     debezium_connectors=("jdbc" "mongodb" "mysql" "postgres"); \
     for connector in "${debezium_connectors[@]}"; \
@@ -17,6 +16,8 @@ RUN mkdir /usr/share/java/debezium; \
     done; \
     confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:${JDBC_CONNECTOR_VERSION} && \
     confluent-hub install --no-prompt confluentinc/kafka-connect-json-schema-converter:latest; \
+    curl -LO https://github.com/ClickHouse/clickhouse-kafka-connect/releases/download/v1.2.6/clickhouse-kafka-connect-v1.2.6.zip; \
+    unzip clickhouse-kafka-connect-v1.2.6.zip; \
     mkdir -p /usr/share/java/clickhouse; \
-    cp clickhouse-kafka-connect-v1.2.6-confluent.jar /usr/share/java/clickhouse/;
+    cp -r clickhouse-kafka-connect-v1.2.6 /usr/share/java/clickhouse/;
 WORKDIR /home/appuser

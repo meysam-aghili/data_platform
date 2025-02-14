@@ -46,38 +46,53 @@ services:
     ports:
       - ${GRAFANA_PORT}:3000
     volumes:
-      - grafana-data:/var/lib/grafana
-      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      # - grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/plugins:/var/lib/grafana/plugins
+      - ./grafana/dashboard-provider.yaml:/etc/grafana/provisioning/dashboards/default.yaml
+      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
     environment:
-      - GF_SECURITY_ADMIN_USER=grafana
-      - GF_SECURITY_ADMIN_PASSWORD=grafana
-      - GF_USERS_ALLOW_SIGN_UP=false
+        GF_SECURITY_ADMIN_USER: grafana
+        GF_SECURITY_ADMIN_PASSWORD: grafana
+        GF_USERS_ALLOW_SIGN_UP: 'false'
+        GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-clickhouse-datasource
     <<: *deploy-on-front
     <<: *network
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
       <<: *healthcheck-config
 
-  kibana:
-    image: kibana:${KIBANA_VERSION}
+  metabase:
+    image: metabase/metabase:${METABASE_VERSION}
     ports:
-      - ${KIBANA_PORT}:5601
-    entrypoint: |
-      sh -c "
-      export ELASTIC_PASSWORD=$$(cat /run/secrets/elasticsearch_password) &&
-      /bin/tini -- /usr/local/bin/kibana-docker --elasticsearch.password=$$ELASTIC_PASSWORD --elasticsearch.username=elastic --elasticsearch.hosts=http://elasticsearch:${ELASTICSEARCH_PORT} --host=0.0.0.0
-      "
-    secrets:
-      - elasticsearch_password
-    <<: *network
+      - ${METABASE_PORT}:3000
+    volumes:
+      - ./metabase/plugins:/plugins
     <<: *deploy-on-front
+    <<: *network
+    # healthcheck:
+    #   test: curl --fail -X GET -I http://localhost:3000/api/health || exit 1
+
+  # kibana:
+  #   image: kibana:${KIBANA_VERSION}
+  #   ports:
+  #     - ${KIBANA_PORT}:5601
+  #   entrypoint: |
+  #     sh -c "
+  #     export ELASTIC_PASSWORD=$$(cat /run/secrets/elasticsearch_password) &&
+  #     /bin/tini -- /usr/local/bin/kibana-docker --elasticsearch.password=$$ELASTIC_PASSWORD --elasticsearch.username=elastic --elasticsearch.hosts=http://elasticsearch:${ELASTICSEARCH_PORT} --host=0.0.0.0
+  #     "
+  #   secrets:
+  #     - elasticsearch_password
+  #   <<: *network
+  #   <<: *deploy-on-front
     
 secrets:
   postgres_password:
     external: true
-  elasticsearch_password:
-    external: true
+  # elasticsearch_password:
+  #   external: true
 
-volumes:
-  grafana-data:
-    driver: local
+# volumes:
+#   grafana-data:
+#     driver: local

@@ -42,6 +42,9 @@ x-deploy-on-host-03: &deploy-on-host-03
 x-clickhouse-node-common: &clickhouse-node-common
   image: 'clickhouse/clickhouse-server:${CLICKHOUSE_NODE_VERSION}'
   <<: *network
+  healthcheck:
+      test: wget --no-verbose --tries=1 --spider localhost:8123/ping || exit 1
+      <<: *healthcheck-config
 
 x-clickhouse-keeper-common: &clickhouse-keeper-common
   image: 'clickhouse/clickhouse-keeper:${CLICKHOUSE_KEEPER_VERSION}'
@@ -54,10 +57,12 @@ services:
     hostname: clickhouse-node-01
     ports:
       - ${CLICKHOUSE_NODE_01_PORT}:8123
-    #   - 9000:9000
+      # - 9000:9000
+      # - 9126:9126 metrics
     volumes:
       - ./clickhouse/config/clickhouse-node-01/config.xml:/etc/clickhouse-server/config.d/config.xml
       - ./clickhouse/config/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - clickhouse-node-01-data:/var/lib/clickhouse/
     <<: *deploy-on-host-01
   
   clickhouse-node-02:
@@ -68,6 +73,7 @@ services:
     volumes:
       - ./clickhouse/config/clickhouse-node-02/config.xml:/etc/clickhouse-server/config.d/config.xml
       - ./clickhouse/config/users.xml:/etc/clickhouse-server/users.d/users.xml
+      - clickhouse-node-02-data:/var/lib/clickhouse/
     <<: *deploy-on-host-02
 
   clickhouse-keeper-01:
@@ -104,3 +110,7 @@ services:
     command: [-config, /opt/config.yml]
     <<: *network
     <<: *deploy-on-host-01
+
+volumes:
+  clickhouse-node-01-data:
+  clickhouse-node-02-data:

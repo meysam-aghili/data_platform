@@ -55,6 +55,13 @@
         <replica>02</replica>
 		<cluster>cluster_nesaj</cluster>
     </macros>
+    <prometheus>
+        <endpoint>/metrics</endpoint>
+        <port>9126</port>
+        <metrics>true</metrics>
+        <events>true</events>
+        <asynchronous_metrics>true</asynchronous_metrics>
+    </prometheus>
    <!-- <storage_configuration>
         <disks>
             <s3>
@@ -82,7 +89,7 @@
             </s3_main>
         </policies>
     </storage_configuration> -->
-    <backups>
+    <!-- <backups>
         <allowed_disk>s3</allowed_disk>
-    </backups>
+    </backups> -->
 </clickhouse>

@@ -51,7 +51,7 @@ scrape_configs:
       'airflow-flower:10018'
       ]
 
-- job_name: 'cadvisor'
+  - job_name: 'cadvisor'
     dns_sd_configs:
     static_configs:
     - targets: [
@@ -63,3 +63,10 @@ scrape_configs:
     - targets: [
       'host-01:9100'
     ]
+  
+  - job_name: clickhouse
+    static_configs:
+      - targets: [
+        'clickhouse-node-01:9126',
+        'clickhouse-node-02:9126'
+        ]

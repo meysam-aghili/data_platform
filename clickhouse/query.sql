@@ -53,11 +53,11 @@ CREATE TABLE IF NOT EXISTS nesaj.order_items ON CLUSTER 'cluster_nesaj'
     unit_price Int32,
     price Int32
 ) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/{database}/order_items', '{replica}')
-ORDER BY (product_id,order_id,id
+ORDER BY (product_id,order_id,id);
 
 select * from nesaj.products;
 select * from nesaj.orders;
-select * from nesaj.customers;);
+select * from nesaj.customers;
 select * from nesaj.order_items;
 
 

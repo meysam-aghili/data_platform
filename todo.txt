@@ -20,6 +20,10 @@ az kafka transaction estefade kardi?
 data imbalance ro chejuri handle mikonid
 image ksqldb ksqldb-server ksql-server cp-ksqldb which one ?
 deadletterqueue darid?
+age kafka down she chejuri restoremiseh
+backup giri az volume ha chejuri anjam miseh
+chera cluster kafka connect darim
+fargh advertised list va lis?
 
 -------CLICKHOUSE QA
 che datai too click hosue ngeah midarid ? khame orders ya agg data of orders?
@@ -49,6 +53,7 @@ add spark
 test dagster
 ksql
 sasl and security
+multipass cluster
 
 
 ---------------------------

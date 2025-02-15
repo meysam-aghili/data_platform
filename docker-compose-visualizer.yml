@@ -68,10 +68,21 @@ services:
       - ${METABASE_PORT}:3000
     volumes:
       - ./metabase/plugins:/plugins
+    environment:
+      JAVA_TIMEZONE: Asia/Tehran
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: postgres
+      MB_DB_PASS_FILE: /run/secrets/postgres_password
+      MB_DB_HOST: postgres
+    secrets:
+      - postgres_password
     <<: *deploy-on-front
     <<: *network
-    # healthcheck:
-    #   test: curl --fail -X GET -I http://localhost:3000/api/health || exit 1
+    healthcheck:
+      test: curl --fail -I http://localhost:3000/api/health || exit 1
+      <<: *healthcheck-config
 
   # kibana:
   #   image: kibana:${KIBANA_VERSION}

@@ -30,6 +30,17 @@ az kafka engine ya sink connector?
 
 --------------------------------------
 visual data using grafana, metabase, powerbi, tableau, supercet
+    create clickhouse database via api
+    export dashbaord as file
+    import dashboard file via volume
+install all plugins via dockerfile not volume sharing
+visual all prom metrics in grafana
+
+what is this in clickhouse compose
+ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
 
 add logs to elk stack and visual
 add influx for time series data and visual

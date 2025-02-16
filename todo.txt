@@ -29,10 +29,9 @@ chanta broker node va keeper node darid? chanta sahrd chanta replica darid?
 az kafka engine ya sink connector?
 
 --------------------------------------
-visual data using grafana, metabase, powerbi, tableau, supercet
-    create clickhouse database via api
-    export dashbaord as file
-    import dashboard file via volume
+visual data using metabase, powerbi, tableau, supercet
+    create MATERIALIZED view on top of clickhouse sales tables
+    visual data using metabase
 install all plugins via dockerfile not volume sharing
 visual all prom metrics in grafana
 

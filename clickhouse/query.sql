@@ -60,6 +60,25 @@ select * from nesaj.orders;
 select * from nesaj.customers;
 select * from nesaj.order_items;
 
+select count() from nesaj.customers;
+
+select
+    oi.id as order_item_id
+    ,oi.order_id
+    ,o.customer_id
+    ,oi.product_id
+    ,oi.quantity
+    ,oi.unit_price
+    ,oi.price
+    ,o.order_date
+    ,concat(c.first_name, c.last_name) as customer_name
+    ,p.name as product_name
+from order_items oi
+join orders o on o.id = oi.order_id
+join customers c on c.id = o.customer_id
+join products p on p.id = oi.product_id
+limit 10;
+
 
 --------------------------------------------------------------------------------------------------------------
 

@@ -25,13 +25,16 @@ def generate_products_row_data():
     return {"name": name, "description": description}
 
 def generate_orders_row_data():
-    customer_id = random.randint(1, 10000)
+    customer_ids = pg_exec_query('akrana', 'select id from sales.customers', is_select=True)
+    customer_id = random.choice(customer_ids or [random.randint(1, 1000000)])
     order_date = fake.date_time_between(start_date="-1y", end_date="now").strftime("%Y-%m-%d %H:%M:%S")
     return {"customer_id": customer_id, "order_date": order_date}
 
 def generate_order_items_row_data():
-    order_id = random.randint(1, 1000000)
-    product_id = random.randint(1, 1000)
+    order_ids = pg_exec_query('akrana', 'select id from sales.orders', is_select=True)
+    order_id = random.choice(order_ids or [random.randint(1, 1000000)])
+    product_ids = pg_exec_query('akrana', 'select id from sales.products', is_select=True)
+    product_id = random.choice(product_ids or [random.randint(1, 1000000)])
     quantity = random.randint(1, 20)
     unit_price = random.randint(1000, 100000000)
     price = quantity*unit_price
@@ -50,14 +53,17 @@ def generate_sensor_row_data():
     value = random.randint(0, 100)
     return {"sensor_id": sensor_id, "timestamp": timestamp, "value": value}
 
-def pg_exec_query(database: str, query: str, params = None, autocommit = True, ignore_errors = False):
+def pg_exec_query(database: str, query: str, is_select: bool, params = None, autocommit = True, ignore_errors = False):
     conn = psycopg2.connect(host=pg_host, database=database, user=pg_username, password=pg_password)
     conn.autocommit = autocommit
     cur = conn.cursor()
     try:
         cur.execute(query, params)
-        if not autocommit:
+        if is_select:
+            return [row[0] for row in cur.fetchall()]
+        if not autocommit and not is_select:
             conn.commit()
+        return None
     except (Exception, psycopg2.Error) as error:
         if not autocommit:
             conn.rollback()
@@ -69,7 +75,7 @@ def pg_exec_query(database: str, query: str, params = None, autocommit = True, i
         conn.close()
 
 def insert_row_into_pg(database: str, table_name: str, columns: tuple, row: tuple):
-    pg_exec_query(database=database, query=f"INSERT INTO {table_name} {str(columns).replace("'", "")} VALUES {str(tuple(["%s" for i in range(len(columns))])).replace("'", "")}", params=row)
+    pg_exec_query(database=database, query=f"INSERT INTO {table_name} {str(columns).replace("'", "")} VALUES {str(tuple(["%s" for i in range(len(columns))])).replace("'", "")}", params=row, is_select=False)
 
 def etl_log_data(event: threading.Event):
     while not event.is_set(): 
@@ -125,13 +131,18 @@ def etl_order_items_data(event: threading.Event):
         row = tuple(data.values())
         insert_row_into_pg("akrana", table_name, columns, row)
 
+def delete_all():
+    pg_exec_query(database="postgres", query="DROP DATABASE IF EXISTS iot WITH (FORCE);", ignore_errors=True, is_select=False)
+    pg_exec_query(database="postgres", query="DROP DATABASE IF EXISTS log WITH (FORCE);", ignore_errors=True, is_select=False)
+    pg_exec_query(database="postgres", query="DROP DATABASE IF EXISTS akrana WITH (FORCE);", ignore_errors=True, is_select=False)
+
 def create_pg_db():
-    pg_exec_query(database="postgres", query="CREATE DATABASE iot;", ignore_errors=True)
-    pg_exec_query(database="iot", query="CREATE SCHEMA sensors;", ignore_errors=True)
-    pg_exec_query(database="postgres", query="CREATE DATABASE log;", ignore_errors=True)
-    pg_exec_query(database="log", query="CREATE SCHEMA logs;", ignore_errors=True)
-    pg_exec_query(database="postgres", query="CREATE DATABASE akrana;", ignore_errors=True)
-    pg_exec_query(database="akrana", query="CREATE SCHEMA sales;", ignore_errors=True)
+    pg_exec_query(database="postgres", query="CREATE DATABASE iot;", ignore_errors=True, is_select=False)
+    pg_exec_query(database="iot", query="CREATE SCHEMA sensors;", ignore_errors=True, is_select=False)
+    pg_exec_query(database="postgres", query="CREATE DATABASE log;", ignore_errors=True, is_select=False)
+    pg_exec_query(database="log", query="CREATE SCHEMA logs;", ignore_errors=True, is_select=False)
+    pg_exec_query(database="postgres", query="CREATE DATABASE akrana;", ignore_errors=True, is_select=False)
+    pg_exec_query(database="akrana", query="CREATE SCHEMA sales;", ignore_errors=True, is_select=False)
     
     pg_exec_query(
         database="iot", 
@@ -142,7 +153,7 @@ def create_pg_db():
             sensor_id INTEGER,
             timestamp TIMESTAMP,
             value INTEGER
-        );""")
+        );""", is_select=False)
     pg_exec_query(
         database="log", 
         query="""
@@ -153,7 +164,7 @@ def create_pg_db():
             log_level VARCHAR(50),
             timestamp TIMESTAMP,
             message TEXT
-        );""")
+        );""", is_select=False)
     pg_exec_query(
         database="akrana", 
         query="""
@@ -185,7 +196,7 @@ def create_pg_db():
             quantity INTEGER,
             unit_price INTEGER,
             price INTEGER
-        );""")
+        );""", is_select=False)
 
 stop_threads = threading.Event()
 
@@ -247,8 +258,12 @@ def main():
     parser = argparse.ArgumentParser(description='Database Creation Script')
     parser.add_argument('-initdb', help='create databases', action='store_true')
     parser.add_argument('-gen', help='generate inserts', action='store_true')
+    parser.add_argument('-delete', help='clean', action='store_true')
     args = parser.parse_args()
     
+    if args.delete:
+        delete_all()
+
     if args.initdb:
         create_pg_db()
         print('initdb done')

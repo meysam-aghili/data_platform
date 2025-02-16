@@ -49,11 +49,6 @@ x-kafka-common-env: &kafka-common-env
   KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
   CLUSTER_ID: YqLu9-0pSQ6QQCZqFsJlVg
 
-x-kafka-controller-common: &kafka-controller-common
-  <<: *kafka-common
-  volumes:
-    # - ./data/kafka-controller:/var/lib/kafka/data
-    - ./kafka/kafka-controller-exporter.yml:/home/appuser/kafka-controller-exporter.yml
 x-kafka-controller-envs: &kafka-controller-envs
   <<: *kafka-common-env
   KAFKA_PROCESS_ROLES: controller
@@ -61,11 +56,6 @@ x-kafka-controller-envs: &kafka-controller-envs
   KAFKA_HEAP_OPTS: '-Xms1g -Xmx1g' # set min max of heap memory size
   KAFKA_OPTS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=${KAFKA_CONTROLLER_METRICS_PORT}:/home/appuser/kafka-controller-exporter.yml"
 
-x-kafka-broker-common: &kafka-broker-common
-  <<: *kafka-common
-  volumes:
-    # - ./data/kafka-controller:/var/lib/kafka/data
-    - ./kafka/kafka-broker-exporter.yml:/home/appuser/kafka-broker-exporter.yml
 x-kafka-broker-envs: &kafka-broker-envs
   <<: *kafka-common-env
   KAFKA_PROCESS_ROLES: broker
@@ -116,9 +106,12 @@ x-kafka-connect-envs: &kafka-connect-envs
 services:
 
   kafka-controller-01:
-    <<: *kafka-controller-common
+    <<: *kafka-common
     ports:
       - ${KAFKA_CONTROLLER_01_PORT}:${KAFKA_CONTROLLER_01_PORT}
+    volumes:
+      - kafka-controller-01-data:/var/lib/kafka/data
+      - ./kafka/kafka-controller-exporter.yml:/home/appuser/kafka-controller-exporter.yml
     environment:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1001
@@ -126,9 +119,12 @@ services:
     <<: *deploy-on-host-01
 
   kafka-controller-02:
-    <<: *kafka-controller-common
+    <<: *kafka-common
     ports:
       - ${KAFKA_CONTROLLER_02_PORT}:${KAFKA_CONTROLLER_02_PORT}
+    volumes:
+      - kafka-controller-02-data:/var/lib/kafka/data
+      - ./kafka/kafka-controller-exporter.yml:/home/appuser/kafka-controller-exporter.yml
     environment:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1002
@@ -136,9 +132,12 @@ services:
     <<: *deploy-on-host-02
 
   kafka-controller-03:
-    <<: *kafka-controller-common
+    <<: *kafka-common
     ports:
       - ${KAFKA_CONTROLLER_03_PORT}:${KAFKA_CONTROLLER_03_PORT}
+    volumes:
+      - kafka-controller-03-data:/var/lib/kafka/data
+      - ./kafka/kafka-controller-exporter.yml:/home/appuser/kafka-controller-exporter.yml
     environment:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1003
@@ -146,10 +145,13 @@ services:
     <<: *deploy-on-host-03
 
   kafka-broker-01:
-    <<: *kafka-broker-common
+    <<: *kafka-common
     ports:
       - ${KAFKA_BROKER_01_EXT_PORT}:${KAFKA_BROKER_01_EXT_PORT}
       - ${KAFKA_BROKER_01_INT_PORT}:${KAFKA_BROKER_01_INT_PORT}
+    volumes:
+      - kafka-broker-01-data:/var/lib/kafka/data
+      - ./kafka/kafka-broker-exporter.yml:/home/appuser/kafka-broker-exporter.yml
     environment:
       <<: *kafka-broker-envs
       KAFKA_NODE_ID: 1
@@ -158,10 +160,13 @@ services:
     <<: *deploy-on-host-01
 
   kafka-broker-02:
-    <<: *kafka-broker-common
+    <<: *kafka-common
     ports:
       - ${KAFKA_BROKER_02_EXT_PORT}:${KAFKA_BROKER_02_EXT_PORT}
       - ${KAFKA_BROKER_02_INT_PORT}:${KAFKA_BROKER_02_INT_PORT}
+    volumes:
+      - kafka-broker-02-data:/var/lib/kafka/data
+      - ./kafka/kafka-broker-exporter.yml:/home/appuser/kafka-broker-exporter.yml
     environment:
       <<: *kafka-broker-envs
       KAFKA_NODE_ID: 2
@@ -170,10 +175,13 @@ services:
     <<: *deploy-on-host-02
 
   kafka-broker-03:
-    <<: *kafka-broker-common
+    <<: *kafka-common
     ports:
       - ${KAFKA_BROKER_03_EXT_PORT}:${KAFKA_BROKER_03_EXT_PORT}
       - ${KAFKA_BROKER_03_INT_PORT}:${KAFKA_BROKER_03_INT_PORT}
+    volumes:
+      - kafka-broker-03-data:/var/lib/kafka/data
+      - ./kafka/kafka-broker-exporter.yml:/home/appuser/kafka-broker-exporter.yml
     environment:
       <<: *kafka-broker-envs
       KAFKA_NODE_ID: 3
@@ -305,7 +313,11 @@ services:
   #   sentrypoint: /bin/sh
   #   tty: true
   
-# volumes:
-#   kafka-broker-data:
-#   kafka-controller-data:
-#   ksqldb-01-data:
+volumes:
+  kafka-broker-01-data:
+  kafka-broker-02-data:
+  kafka-broker-03-data:
+  kafka-controller-01-data:
+  kafka-controller-02-data:
+  kafka-controller-03-data:
+  # ksqldb-01-data:

@@ -62,6 +62,24 @@ select * from nesaj.order_items;
 
 select count() from nesaj.customers;
 
+
+DROP TABLE IF EXISTS sales ON CLUSTER 'cluster_nesaj';
+CREATE TABLE IF NOT EXISTS sales ON CLUSTER 'cluster_nesaj'(
+    order_item_id Int32,
+    order_id Int32,
+    customer_id Int32,
+    product_id Int32,
+    quantity Int32,
+    unit_price Int32,
+    price Int32,
+    order_date TIMESTAMP,
+    customer_name String,
+    product_name String,
+) ENGINE = ReplicatedReplacingMergeTree('/clickhouse/tables/{database}/sales', '{replica}')
+PARTITION BY toYYYYMM(order_date)
+ORDER BY (product_id, customer_id, order_id, order_item_id);
+
+CREATE MATERIALIZED VIEW sales_mv ON CLUSTER 'cluster_nesaj' TO sales AS
 select
     oi.id as order_item_id
     ,oi.order_id
@@ -76,8 +94,24 @@ select
 from order_items oi
 join orders o on o.id = oi.order_id
 join customers c on c.id = o.customer_id
-join products p on p.id = oi.product_id
-limit 10;
+join products p on p.id = oi.product_id;
+
+INSERT into sales
+select
+    oi.id as order_item_id
+    ,oi.order_id
+    ,o.customer_id
+    ,oi.product_id
+    ,oi.quantity
+    ,oi.unit_price
+    ,oi.price
+    ,o.order_date
+    ,concat(c.first_name, c.last_name) as customer_name
+    ,p.name as product_name
+from order_items oi
+join orders o on o.id = oi.order_id
+join customers c on c.id = o.customer_id
+join products p on p.id = oi.product_id;
 
 
 --------------------------------------------------------------------------------------------------------------

@@ -34,16 +34,12 @@ az kafka engine ya sink connector?
 
 --------------------------------------
 visual data using metabase, powerbi, tableau, supercet
-    create MATERIALIZED view on top of clickhouse sales tables
     visual data using metabase
+    visual in powerbi
+    visual in tableau
+    visual in supercet
 install all plugins via dockerfile not volume sharing
 visual all prom metrics in grafana
-
-what is this in clickhouse compose
-ulimits:
-      nofile:
-        soft: 262144
-        hard: 262144
 
 add logs to elk stack and visual
 add influx for time series data and visual
@@ -53,6 +49,7 @@ test dagster
 ksql
 sasl and security
 multipass cluster
+backup from data,volumes,...
 
 
 ---------------------------

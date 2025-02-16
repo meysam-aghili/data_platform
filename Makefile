@@ -66,7 +66,7 @@ generate-data-pg-tables:
 create-secrets:
 	printf "postgres" | docker secret create postgres_password -
 	printf "grafana" | docker secret create grafana_password -
-	$ printf "minio" | docker secret create minio_password -
+	printf "minio" | docker secret create minio_password -
 	printf "elasticsearch" | docker secret create elasticsearch_password -
 
 docker-swarm:

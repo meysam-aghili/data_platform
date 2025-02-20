@@ -57,7 +57,7 @@ services:
     hostname: clickhouse-node-01
     ports:
       - ${CLICKHOUSE_NODE_01_PORT}:8123
-      # - 9000:9000
+      - 9000:9000
       # - 9126:9126 metrics
     volumes:
       - ./clickhouse/config/clickhouse-node-01/config.xml:/etc/clickhouse-server/config.d/config.xml

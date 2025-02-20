@@ -1,7 +1,0 @@
-.vscode
-*.class
-*.pyc
-*.ipynb
-*.log
-workbooks/**
-rhodry-connect

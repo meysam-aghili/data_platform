@@ -10,6 +10,7 @@ fi
 
 # Store the input filename
 input_file="$1"
+input_env_file="$2"
 
 # Check if the input file exists
 if [ ! -f "$input_file" ]; then
@@ -17,10 +18,14 @@ if [ ! -f "$input_file" ]; then
     exit 1
 fi
 
+if [ ! -f "$input_env_file" ]; then
+    input_env_file=".env"
+fi
+
 if [ -f .env ]; then
     echo "processing .env"
     set -a
-    source <(cat .env | sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" | tr -d '"')
+    source <(cat $input_env_file | sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" | tr -d '"')
     set +a
 fi
 # envsubst < docker-compose-kafka.yml > docker-compose-kafka.prod.yml

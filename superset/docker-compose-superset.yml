@@ -1,0 +1,109 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+x-superset-common: &superset-common
+  image: apache/superset:${SUPERSET_VERSION}
+  volumes:
+    - ./configs:/app/docker
+    # - superset-data:/app/superset_home
+  env_file:
+    - configs/.env
+  <<: *deploy-on-front
+  <<: *network
+
+services:
+
+  redis:
+    image: redis:${REDIS_VERSION}
+    # volumes:
+    #   - redis-data:/data
+    <<: *deploy-on-front
+    <<: *network
+    # healthcheck:
+    #   test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+    #   <<: *healthcheck-config
+
+  postgres:
+    image: postgres:${POSTGRES_VERSION}
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    # volumes:
+    #   - postgres-data:/var/lib/postgresql/data
+    user: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost", "-p", "5432"]
+      <<: *healthcheck-config
+  
+  superset:
+    <<: *superset-common
+    ports:
+      - ${SUPERSET_PORT}:8088
+    command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
+
+  superset-init:
+    <<: *superset-common
+    command: ["/app/docker/docker-init.sh"]
+    environment:
+      SUPERSET_LOG_LEVEL: "info"
+   
+  superset-worker:
+    <<: *superset-common
+    command: ["/app/docker/docker-bootstrap.sh", "worker"]
+    environment:
+      CELERYD_CONCURRENCY: 2
+      SUPERSET_LOG_LEVEL: "info"
+    # healthcheck:
+      # test: ["CMD", "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$$HOSTNAME"]  this must be fixed by our sh bash at DK
+      # <<: *healthcheck-config
+
+  superset-worker-beat:
+    <<: *superset-common
+    command: ["/app/docker/docker-bootstrap.sh", "beat"]
+    environment:
+      SUPERSET_LOG_LEVEL: "info"
+
+# volumes:
+#   superset-data:
+#   postgres-data:
+#   redis-data:

@@ -71,3 +71,9 @@ create-secrets:
 
 docker-swarm:
 	docker swarm init
+
+
+deploy-superset:
+	./compose_envs.sh superset/docker-compose-superset.yml superset/.env
+	docker stack deploy platform-superset --compose-file superset/docker-compose-superset.prod.yml
+	rm superset/docker-compose-superset.prod.yml

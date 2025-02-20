@@ -35,8 +35,6 @@ az kafka engine ya sink connector?
 --------------------------------------
 visual data using metabase, powerbi, tableau, supercet
     visual data using metabase
-    visual in powerbi
-    visual in tableau
     visual in supercet
 install all plugins via dockerfile not volume sharing
 visual all prom metrics in grafana

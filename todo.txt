@@ -37,6 +37,9 @@ visual data using metabase taha
 visual in supercet
     add volume
     add healthcheck
+    remove init service
+multipass cluster
+    cant use vpn
 mv docker composes to each section
 
 install all plugins via dockerfile not volume sharing
@@ -49,7 +52,7 @@ add spark
 test dagster
 ksql
 sasl and security
-multipass cluster
+
 backup from data,volumes,...
 
 

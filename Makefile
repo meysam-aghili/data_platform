@@ -1,12 +1,7 @@
-ifneq (,$(wildcard ./.env))
-    include .env
-    export
-endif
+include .env
+include ./kafka_connect/.env
+include ./superset/.env
 
-ifneq (,$(wildcard ./kafka_connect/.env))
-    include ./kafka_connect/.env
-    export
-endif
 
 all: build deploy
 
@@ -72,8 +67,9 @@ create-secrets:
 docker-swarm:
 	docker swarm init
 
-
+build-superset:
+	docker build -t apache/superset-prod:${SUPERSET_VERSION} --build-arg SUPERSET_VERSION=${SUPERSET_VERSION} ./superset/
 deploy-superset:
-	./compose_envs.sh superset/docker-compose-superset.yml superset/.env
+	./compose_envs.sh superset/docker-compose-superset.yml .env superset/.env
 	docker stack deploy platform-superset --compose-file superset/docker-compose-superset.prod.yml
 	rm superset/docker-compose-superset.prod.yml

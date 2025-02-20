@@ -18,15 +18,26 @@ if [ ! -f "$input_file" ]; then
     exit 1
 fi
 
-if [ ! -f "$input_env_file" ]; then
-    input_env_file=".env"
+# Process each provided .env file, starting from the second argument
+shift # Remove the first argument (input_file)
+env_files=("$@") # Store remaining arguments as array
+
+# If no .env files provided, add default .env to the array if it exists
+if [ ${#env_files[@]} -eq 0 ] && [ -f .env ]; then
+    env_files=(".env")
 fi
 
-if [ -f .env ]; then
-    echo "processing .env"
-    set -a
-    source <(cat $input_env_file | sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" | tr -d '"')
-    set +a
-fi
+# Source each .env file in the array
+for input_env_file in "${env_files[@]}"; do
+    if [ -f "$input_env_file" ]; then
+        echo "Processing $input_env_file"
+        set -a
+        source <(cat "$input_env_file" | sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" | tr -d '"')
+        set +a
+    else
+        echo "Warning: File '$input_env_file' not found. Skipping."
+    fi
+done
+
 # envsubst < docker-compose-kafka.yml > docker-compose-kafka.prod.yml
 envsubst < "$input_file" > "${input_file%.yml}.prod.yml"

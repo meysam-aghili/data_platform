@@ -33,9 +33,12 @@ chanta broker node va keeper node darid? chanta sahrd chanta replica darid?
 az kafka engine ya sink connector?
 
 --------------------------------------
-visual data using metabase, powerbi, tableau, supercet
-    visual data using metabase
-    visual in supercet
+visual data using metabase taha
+visual in supercet
+    add volume
+    add healthcheck
+mv docker composes to each section
+
 install all plugins via dockerfile not volume sharing
 visual all prom metrics in grafana
 

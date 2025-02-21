@@ -1,0 +1,69 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+services:
+  portainer:
+    image: portainer/portainer-ce:${PORTAINER_VERSION}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    ports:
+      - ${PORTAINER_PORT}:9000
+    <<: [*network, *deploy-on-front]
+    
+
+  registry:
+    # doc https://gabrieltanner.org/blog/docker-registry/
+    image: registry:${REGISTRY_VERSION}
+    ports:
+      - ${REGISTRY_PORT}:443
+    volumes:
+      - registry-data:/var/lib/registry
+      - ./configs/certs:/certs
+    environment:
+      - REGISTRY_HTTP_ADDR=0.0.0.0:443
+      - REGISTRY_HTTP_TLS_CERTIFICATE=certs/domain.crt
+      - REGISTRY_HTTP_TLS_KEY=certs/domain.key
+    <<: [*network, *deploy-on-front]
+
+volumes:
+  portainer-data:
+  registry-data:

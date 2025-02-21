@@ -39,7 +39,8 @@ visual in supercet
     add healthcheck
     remove init service
 multipass cluster
-    cant use vpn
+    mp-host-01 registry ssl error on pull
+    config mp-host-02
 mv docker composes to each section
 
 install all plugins via dockerfile not volume sharing

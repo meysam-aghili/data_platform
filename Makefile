@@ -73,3 +73,8 @@ deploy-superset:
 	./compose_envs.sh superset/docker-compose-superset.yml .env superset/.env
 	docker stack deploy platform-superset --compose-file superset/docker-compose-superset.prod.yml
 	rm superset/docker-compose-superset.prod.yml
+
+deploy-docker:
+	./compose_envs.sh docker/docker-compose-docker.yml .env docker/.env
+	docker stack deploy platform-docker --compose-file docker/docker-compose-docker.prod.yml
+	rm docker/docker-compose-docker.prod.yml

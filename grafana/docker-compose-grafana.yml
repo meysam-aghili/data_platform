@@ -1,0 +1,74 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+services:
+
+  grafana:
+    image: ${GRAFANA_IMAGE}
+    ports:
+      - ${GRAFANA_PORT}:3000
+    volumes:
+      # - grafana-data:/var/lib/grafana
+      - ./dashboards:/var/lib/grafana/dashboards
+    configs:
+      - source: grafana-provider
+        target: /etc/grafana/provisioning/dashboards/default.yaml
+      - source: grafana-datasources
+        target: /etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+        GF_SECURITY_ADMIN_USER: grafana
+        GF_SECURITY_ADMIN_PASSWORD: grafana
+        GF_USERS_ALLOW_SIGN_UP: 'false'
+        GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-clickhouse-datasource
+    <<: [*network, *deploy-on-front]
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      <<: *healthcheck-config
+
+# volumes:
+#   grafana-data:
+#     driver: local
+
+configs:
+  grafana-provider:
+    file: ./config/dashboard-provider.yaml
+  grafana-datasources:
+    file: ./config/datasources.yaml

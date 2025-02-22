@@ -40,37 +40,34 @@ x-deploy-on-host-03: &deploy-on-host-03
 ##################################################################
 
 services:
-  portainer:
-    image: ${PORTAINER_IMAGE}
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer-data:/data
+  postgres:
+    image: ${POSTGRES_IMAGE}
     ports:
-      - ${PORTAINER_PORT}:9000
-    <<: [*network, *deploy-on-front]
-
-  registry:
-    # doc https://gabrieltanner.org/blog/docker-registry/
-    image: ${REGISTRY_IMAGE}
-    ports:
-      - ${REGISTRY_PORT}:443
-    volumes:
-      - registry-data:/var/lib/registry
+      - ${POSTGRES_PORT}:5432
     environment:
-      - REGISTRY_HTTP_ADDR=0.0.0.0:443
-      - REGISTRY_HTTP_TLS_CERTIFICATE=/run/secrets/registry_ssl_crt
-      - REGISTRY_HTTP_TLS_KEY=/run/secrets/registry_ssl_key
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    configs:
+      - source: postgres-config
+        target: /etc/postgresql.conf
+    command: ["postgres", "-c", "config_file=/etc/postgresql.conf"] # to avoid overlap with postgresql.conf file bug error
     secrets:
-      - registry_ssl_crt
-      - registry_ssl_key
+      - postgres_password
+    user: postgres
     <<: [*network, *deploy-on-front]
-
-volumes:
-  portainer-data:
-  registry-data:
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost", "-p", "5432"]
+      <<: *healthcheck-config
 
 secrets:
-  registry_ssl_crt:
+  postgres_password:
     external: true
-  registry_ssl_key:
-    external: true
+
+volumes:
+  postgres-data:
+
+configs:
+  postgres-config:
+    file: ./config/postgresql.conf

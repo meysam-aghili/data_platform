@@ -40,77 +40,96 @@ x-deploy-on-host-03: &deploy-on-host-03
 ##################################################################
 
 x-clickhouse-node-common: &clickhouse-node-common
-  image: 'clickhouse/clickhouse-server:${CLICKHOUSE_NODE_VERSION}'
+  image: ${CLICKHOUSE_NODE_IMAGE}
   <<: *network
   healthcheck:
       test: wget --no-verbose --tries=1 --spider localhost:8123/ping || exit 1
       <<: *healthcheck-config
 
 x-clickhouse-keeper-common: &clickhouse-keeper-common
-  image: 'clickhouse/clickhouse-keeper:${CLICKHOUSE_KEEPER_VERSION}'
+  image: ${CLICKHOUSE_KEEPER_IMAGE}
   <<: *network
 
 services:
 
   clickhouse-node-01:
-    <<: *clickhouse-node-common
+    <<: [*clickhouse-node-common, *deploy-on-host-01]
     hostname: clickhouse-node-01
     ports:
       - ${CLICKHOUSE_NODE_01_PORT}:8123
-      - 9000:9000
+      # - 9000:9000
       # - 9126:9126 metrics
     volumes:
-      - ./clickhouse/config/clickhouse-node-01/config.xml:/etc/clickhouse-server/config.d/config.xml
-      - ./clickhouse/config/users.xml:/etc/clickhouse-server/users.d/users.xml
       - clickhouse-node-01-data:/var/lib/clickhouse/
-    <<: *deploy-on-host-01
+    configs:
+      - source: clickhouse-node-01-config
+        target: /etc/clickhouse-server/config.d/config.xml
+      - source: clickhouse-users
+        target: /etc/clickhouse-server/users.d/users.xml
   
   clickhouse-node-02:
-    <<: *clickhouse-node-common
+    <<: [*clickhouse-node-common, *deploy-on-host-02]
     hostname: clickhouse-node-02
     ports:
       - ${CLICKHOUSE_NODE_02_PORT}:8123
     volumes:
-      - ./clickhouse/config/clickhouse-node-02/config.xml:/etc/clickhouse-server/config.d/config.xml
-      - ./clickhouse/config/users.xml:/etc/clickhouse-server/users.d/users.xml
       - clickhouse-node-02-data:/var/lib/clickhouse/
-    <<: *deploy-on-host-02
+    configs:
+      - source: clickhouse-node-02-config
+        target: /etc/clickhouse-server/config.d/config.xml
+      - source: clickhouse-users
+        target: /etc/clickhouse-server/users.d/users.xml
 
   clickhouse-keeper-01:
-    <<: *clickhouse-keeper-common
+    <<: [*clickhouse-keeper-common, *deploy-on-host-01]
     hostname: clickhouse-keeper-01
     # ports:
     #   - 9181:9181
-    volumes:
-      - ./clickhouse/config/clickhouse-keeper-01/keeper_config.xml:/etc/clickhouse-keeper/keeper_config.xml
-    <<: *deploy-on-host-01
+    configs:
+      - source: clickhouse-keeper-01-config
+        target: /etc/clickhouse-keeper/keeper_config.xml
   
   clickhouse-keeper-02:
-    <<: *clickhouse-keeper-common
+    <<: [*clickhouse-keeper-common, <<: *deploy-on-host-02]
     hostname: clickhouse-keeper-02
-    volumes:
-      - ./clickhouse/config/clickhouse-keeper-02/keeper_config.xml:/etc/clickhouse-keeper/keeper_config.xml
-    <<: *deploy-on-host-02
+    configs:
+      - source: clickhouse-keeper-02-config
+        target: /etc/clickhouse-keeper/keeper_config.xml
 
   clickhouse-keeper-03:
-    <<: *clickhouse-keeper-common
+    <<: [*clickhouse-keeper-common, <<: *deploy-on-host-03]
     hostname: clickhouse-keeper-03
-    volumes:
-      - ./clickhouse/config/clickhouse-keeper-03/keeper_config.xml:/etc/clickhouse-keeper/keeper_config.xml
-    <<: *deploy-on-host-03
+    configs:
+      - source: clickhouse-keeper-03-config
+        target: /etc/clickhouse-keeper/keeper_config.xml
 
   clickhouse-proxy:
-    image: contentsquareplatform/chproxy:${CLICKHOUSE_CHPROXY_VERSION}
+    image: ${CLICKHOUSE_CHPROXY_IMAGE}
     hostname: clickhouse-proxy
     ports:
-      # - 443:443
       - ${CLICKHOUSE_PROXY_PORT}:80
-    volumes:
-      - ./clickhouse/config/chproxy/config.yml:/opt/config.yml
+    configs:
+      - source: clickhouse-chproxy-config
+        target: /opt/config.yml
     command: [-config, /opt/config.yml]
-    <<: *network
-    <<: *deploy-on-host-01
+    <<: [*network, *deploy-on-host-01]
 
 volumes:
   clickhouse-node-01-data:
   clickhouse-node-02-data:
+
+configs:
+  clickhouse-node-01-config:
+    file: ./config/clickhouse-node-01/config.xml
+  clickhouse-node-02-config:
+    file: ./config/clickhouse-node-02/config.xml
+  clickhouse-keeper-01-config:
+    file: ./config/clickhouse-keeper-01/keeper_config.xml
+  clickhouse-keeper-02-config:
+    file: ./config/clickhouse-keeper-02/keeper_config.xml
+  clickhouse-keeper-03-config:
+    file: ./config/clickhouse-keeper-03/keeper_config.xml
+  clickhouse-chproxy-config:
+    file: ./config/chproxy/config.yml
+  clickhouse-users:
+    file: ./config/users.xml

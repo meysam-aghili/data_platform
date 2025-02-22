@@ -1,4 +1,5 @@
 {
+  "insecure-registries" : ["localregistry.com"],
   "registry-mirrors": ["https://focker.ir"],
   "bip": "10.54.54.1/24",
   "default-address-pools": [

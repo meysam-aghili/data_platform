@@ -55,13 +55,17 @@ scrape_configs:
     dns_sd_configs:
     static_configs:
     - targets: [
-      'host-01:8080'
+      'host-01:9200',
+      'host-02:9200',
+      'host-03:9200'
     ]
 
   - job_name: 'node-exporter'
     static_configs:
     - targets: [
-      'host-01:9100'
+      'host-01:9100',
+      'host-02:9100',
+      'host-03:9100'
     ]
   
   - job_name: clickhouse

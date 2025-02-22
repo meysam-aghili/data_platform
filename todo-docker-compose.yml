@@ -1,0 +1,41 @@
+  # elasticsearch:
+  #   image: elasticsearch:${ELASTICSEARCH_VERSION}
+  #   ports:
+  #     - ${ELASTICSEARCH_PORT}:9200
+  #   environment:
+  #     ES_JAVA_OPTS: "-Xms4g -Xmx4g"
+  #     discovery.type: single-node
+  #     cluster.name: nevyn
+  #     network.host: 0.0.0.0
+  #     xpack.license.self_generated.type: basic
+  #     xpack.security.enabled: "true"
+  #     xpack.monitoring.collection.enabled: "true"
+  #   volumes:
+  #     - elasticsearch-data:/usr/share/elasticsearch/data
+  #   secrets:
+  #     - elasticsearch_password
+  #   entrypoint: |
+  #     sh -c "
+  #     export ELASTIC_PASSWORD=$$(cat /run/secrets/elasticsearch_password) &&
+  #     /bin/tini -- /usr/local/bin/docker-entrypoint.sh eswrapper
+  #     "
+  #   <<: *deploy-on-front
+  #   <<: *network
+
+  # minio:
+  #   image: minio/minio:${MINIO_VERSION}
+  #   ports:
+  #     - 10000:10000
+  #     - 10001:10001
+  #   environment:
+  #     - MINIO_ROOT_USER=minioadmin
+  #     - MINIO_ROOT_PASSWORD=minioadmin
+  #     # - MINIO_ROOT_PASSWORD_FILE=/run/secrets/minio_password
+  #   # secrets:
+  #     # - minio_password
+  #   command: server --address 0.0.0.0:10000 --console-address 0.0.0.0:10001 /data
+  #   <<: *deploy-on-host-01
+  #   <<: *network
+    # healthcheck:
+      # test: ["CMD", "mc", "ready", "myminio"]
+      # <<: *healthcheck-config

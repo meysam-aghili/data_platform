@@ -1,5 +1,5 @@
 include .env
-include ./kafka_connect/.env
+include ./kafka/kafka_connect/.env
 include ./superset/.env
 
 
@@ -40,11 +40,6 @@ deploy-monitoring:
 	docker stack deploy platform-monitoring --compose-file docker-compose-monitoring.prod.yml
 	rm docker-compose-monitoring.prod.yml
 
-deploy-clickhouse:
-	./compose_envs.sh docker-compose-clickhouse.yml
-	docker stack deploy platform-clickhouse --compose-file docker-compose-clickhouse.prod.yml
-	rm docker-compose-clickhouse.prod.yml
-
 deploy: create-network deploy-db deploy-kafka deploy-viz deploy-monitoring deploy-clickhouse
 
 remove-all-volumes:
@@ -63,18 +58,32 @@ create-secrets:
 	printf "grafana" | docker secret create grafana_password -
 	printf "minio" | docker secret create minio_password -
 	printf "elasticsearch" | docker secret create elasticsearch_password -
+	cat ./docker/configs/certs/domain.key | docker secret create registry_ssl_key -
+	cat ./docker/configs/certs/domain.crt | docker secret create registry_ssl_crt -
 
-docker-swarm:
-	docker swarm init
 
-build-superset:
-	docker build -t apache/superset-prod:${SUPERSET_VERSION} --build-arg SUPERSET_VERSION=${SUPERSET_VERSION} ./superset/
-deploy-superset:
-	./compose_envs.sh superset/docker-compose-superset.yml .env superset/.env
-	docker stack deploy platform-superset --compose-file superset/docker-compose-superset.prod.yml
-	rm superset/docker-compose-superset.prod.yml
+##########################
 
 deploy-docker:
-	./compose_envs.sh docker/docker-compose-docker.yml .env docker/.env
-	docker stack deploy platform-docker --compose-file docker/docker-compose-docker.prod.yml
-	rm docker/docker-compose-docker.prod.yml
+	./deploy-stack.sh docker
+
+deploy-clickhouse:
+	./deploy-stack.sh clickhouse
+
+deploy-grafana:
+	docker build -t localregistry.com/grafana/grafana-prod:11.5.0 ./grafana/
+	./deploy-stack.sh grafana
+
+deploy-metabase:
+	docker build -t localregistry.com/metabase/metabase-prod:v0.53.2.2 ./metabase/
+	./deploy-stack.sh metabase
+
+deploy-postgres:
+	./deploy-stack.sh postgres
+
+deploy-prometheus:
+	./deploy-stack.sh prometheus
+
+deploy-superset:
+	docker build -t localregistry.com/apache/superset-prod:4.1.1 ./superset/
+	./deploy-stack.sh superset

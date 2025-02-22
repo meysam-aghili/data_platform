@@ -33,6 +33,16 @@ chanta broker node va keeper node darid? chanta sahrd chanta replica darid?
 az kafka engine ya sink connector?
 
 --------------------------------------
+setup kafka
+
+docker pull gcr.io/cadvisor/cadvisor:v0.46.0
+docker tag gcr.io/cadvisor/cadvisor:v0.46.0 localregistry.com/gcr.io/cadvisor/cadvisor:v0.46.0
+docker push localregistry.com/gcr.io/cadvisor/cadvisor:v0.46.0
+make deploy prom
+why 2 nodes only in cadvisor global mode?
+
+fix all healthcheck
+
 visual data using metabase taha
 visual in supercet
     add volume

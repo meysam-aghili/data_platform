@@ -32,7 +32,7 @@ for input_env_file in "${env_files[@]}"; do
     if [ -f "$input_env_file" ]; then
         echo "Processing $input_env_file"
         set -a
-        source <(cat "$input_env_file" | sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" | tr -d '"')
+        source <(cat "$input_env_file" | tr -d '\r' | sed -e '/^#/d;/^\s*$/d' -e "s/'/'\\\''/g" -e "s/=\(.*\)/='\1'/g" | tr -d '"')
         set +a
     else
         echo "Warning: File '$input_env_file' not found. Skipping."

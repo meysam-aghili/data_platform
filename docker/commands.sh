@@ -1,6 +1,4 @@
 # install docker https://github.com/Gozargah/Marzban/discussions/987
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
 
 # add user to docker sudo
 sudo groupadd docker
@@ -12,6 +10,8 @@ reboot
 # add docker configs
 sudo mkdir /etc/docker/
 sudo cp ./docker/daemon.json /etc/docker/
+sudo systemctl daemon-reload
+sudo systemctl restart docker
 
 # backup/restore docker images
 sudo docker save image:tag | gzip -c > filename.tgz

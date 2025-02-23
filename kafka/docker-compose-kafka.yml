@@ -40,7 +40,7 @@ x-deploy-on-host-03: &deploy-on-host-03
 ##################################################################
 
 x-kafka-common: &kafka-common
-  image: confluentinc/cp-kafka-prod:${CONFLUENT_VERSION}
+  image: ${KAFKA_IMAGE}
   <<: *network
 
 x-kafka-common-env: &kafka-common-env
@@ -77,10 +77,8 @@ x-kafka-broker-envs: &kafka-broker-envs
   # KAFKA_SUPER_USERS: "User:admin"
 
 x-kafka-connect-common: &kafka-connect-common
-  image: confluentinc/cp-kafka-connect-prod:${CONFLUENT_VERSION}
+  image: ${KAFKA_CONNECT_IMAGE}
   <<: *network
-  volumes:
-    - ./kafka_connect/kafka-connect-exporter.yml:/home/appuser/kafka-connect-exporter.yml
 x-kafka-connect-envs: &kafka-connect-envs
   CONNECT_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
   CONNECT_REST_PORT: 8083
@@ -106,117 +104,102 @@ x-kafka-connect-envs: &kafka-connect-envs
 services:
 
   kafka-controller-01:
-    <<: *kafka-common
+    <<: [*kafka-common, *deploy-on-host-01]
     ports:
       - ${KAFKA_CONTROLLER_01_PORT}:${KAFKA_CONTROLLER_01_PORT}
-    volumes:
-      - kafka-controller-01-data:/var/lib/kafka/data
-      - ./kafka/kafka-controller-exporter.yml:/home/appuser/kafka-controller-exporter.yml
+    # volumes:
+    #   - kafka-controller-01-data:/var/lib/kafka/data
     environment:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1001
       KAFKA_LISTENERS: CONTROLLER://:${KAFKA_CONTROLLER_01_PORT}
-    <<: *deploy-on-host-01
 
   kafka-controller-02:
-    <<: *kafka-common
+    <<: [*kafka-common, *deploy-on-host-02]
     ports:
       - ${KAFKA_CONTROLLER_02_PORT}:${KAFKA_CONTROLLER_02_PORT}
-    volumes:
-      - kafka-controller-02-data:/var/lib/kafka/data
-      - ./kafka/kafka-controller-exporter.yml:/home/appuser/kafka-controller-exporter.yml
+    # volumes:
+    #   - kafka-controller-02-data:/var/lib/kafka/data
     environment:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1002
       KAFKA_LISTENERS: CONTROLLER://:${KAFKA_CONTROLLER_02_PORT}
-    <<: *deploy-on-host-02
 
   kafka-controller-03:
-    <<: *kafka-common
+    <<: [*kafka-common, *deploy-on-host-03]
     ports:
       - ${KAFKA_CONTROLLER_03_PORT}:${KAFKA_CONTROLLER_03_PORT}
-    volumes:
-      - kafka-controller-03-data:/var/lib/kafka/data
-      - ./kafka/kafka-controller-exporter.yml:/home/appuser/kafka-controller-exporter.yml
+    # volumes:
+    #   - kafka-controller-03-data:/var/lib/kafka/data
     environment:
       <<: *kafka-controller-envs
       KAFKA_NODE_ID: 1003
       KAFKA_LISTENERS: CONTROLLER://:${KAFKA_CONTROLLER_03_PORT}
-    <<: *deploy-on-host-03
 
   kafka-broker-01:
-    <<: *kafka-common
+    <<: [*kafka-common, *deploy-on-host-01]
     ports:
       - ${KAFKA_BROKER_01_EXT_PORT}:${KAFKA_BROKER_01_EXT_PORT}
       - ${KAFKA_BROKER_01_INT_PORT}:${KAFKA_BROKER_01_INT_PORT}
-    volumes:
-      - kafka-broker-01-data:/var/lib/kafka/data
-      - ./kafka/kafka-broker-exporter.yml:/home/appuser/kafka-broker-exporter.yml
+    # volumes:
+    #   - kafka-broker-01-data:/var/lib/kafka/data
     environment:
       <<: *kafka-broker-envs
       KAFKA_NODE_ID: 1
       KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_01_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_01_EXT_PORT}
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-01:${KAFKA_BROKER_01_INT_PORT},PLAINTEXT_EXT://${HOSTIP_01}:${KAFKA_BROKER_01_EXT_PORT}
-    <<: *deploy-on-host-01
 
   kafka-broker-02:
-    <<: *kafka-common
+    <<: [*kafka-common, *deploy-on-host-02]
     ports:
       - ${KAFKA_BROKER_02_EXT_PORT}:${KAFKA_BROKER_02_EXT_PORT}
       - ${KAFKA_BROKER_02_INT_PORT}:${KAFKA_BROKER_02_INT_PORT}
-    volumes:
-      - kafka-broker-02-data:/var/lib/kafka/data
-      - ./kafka/kafka-broker-exporter.yml:/home/appuser/kafka-broker-exporter.yml
+    # volumes:
+    #   - kafka-broker-02-data:/var/lib/kafka/data
     environment:
       <<: *kafka-broker-envs
       KAFKA_NODE_ID: 2
       KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_02_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_02_EXT_PORT}
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-02:${KAFKA_BROKER_02_INT_PORT},PLAINTEXT_EXT://${HOSTIP_02}:${KAFKA_BROKER_02_EXT_PORT}
-    <<: *deploy-on-host-02
 
   kafka-broker-03:
-    <<: *kafka-common
+    <<: [*kafka-common, *deploy-on-host-03]
     ports:
       - ${KAFKA_BROKER_03_EXT_PORT}:${KAFKA_BROKER_03_EXT_PORT}
       - ${KAFKA_BROKER_03_INT_PORT}:${KAFKA_BROKER_03_INT_PORT}
-    volumes:
-      - kafka-broker-03-data:/var/lib/kafka/data
-      - ./kafka/kafka-broker-exporter.yml:/home/appuser/kafka-broker-exporter.yml
+    # volumes:
+    #   - kafka-broker-03-data:/var/lib/kafka/data
     environment:
       <<: *kafka-broker-envs
       KAFKA_NODE_ID: 3
       KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_03_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_03_EXT_PORT}
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-03:${KAFKA_BROKER_03_INT_PORT},PLAINTEXT_EXT://${HOSTIP_03}:${KAFKA_BROKER_03_EXT_PORT}
-    <<: *deploy-on-host-03
 
   kafka-connect-01:
-    <<: *kafka-connect-common
+    <<: [*kafka-connect-common, *deploy-on-host-01]
     hostname: kafka-connect-01
     ports:
       - ${KAFKA_CONNECT_REST_PORT}:8083
     environment:
       <<: *kafka-connect-envs
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-01
-    <<: *deploy-on-host-01
 
   # kafka-connect-02:
-  #   <<: *kafka-connect-common
+  #   <<: [*kafka-connect-common, *deploy-on-host-02]
   #   hostname: kafka-connect-02
   #   environment:
   #     <<: *kafka-connect-envs
   #     CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-02
-  #   <<: *deploy-on-host-02
 
   # kafka-connect-03:
-  #   <<: *kafka-connect-common
+  #   <<: [*kafka-connect-common, *deploy-on-host-03]
   #   hostname: kafka-connect-03
   #   environment:
   #     <<: *kafka-connect-envs
   #     CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-03
-  #   <<: *deploy-on-host-03
 
   kafka-schema-registry:
-    image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
+    image: ${KAFKA_SCHEMA_REGISTRY_IMAGE}
     ports:
       - ${KAFKA_SCHEMA_REGISTRY_PORT}:8081
     environment:
@@ -224,14 +207,13 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
       SCHEMA_REGISTRY_SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: http
-    <<: *deploy-on-front
-    <<: *network
+    <<: [*network, *deploy-on-front]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081"]
       <<: *healthcheck-config
 
   kafka-rest-proxy:
-    image: confluentinc/cp-kafka-rest:${CONFLUENT_VERSION}
+    image: ${KAFKA_REST_PROXY_IMAGE}
     ports:
       - ${KAFKA_REST_PROXY_PORT}:8082
     environment:
@@ -239,14 +221,13 @@ services:
       KAFKA_REST_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
       KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
       KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://kafka-schema-registry:8081'
-    <<: *deploy-on-front
-    <<: *network
+    <<: [*network, *deploy-on-front]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082"]
       <<: *healthcheck-config
 
   kafka-ui:
-    image: provectuslabs/kafka-ui:${KAFKA_UI_VERSION}
+    image: ${KAFKA_UI_IMAGE}
     ports:
       - ${KAFKA_UI_PORT}:8080
     environment:
@@ -258,29 +239,8 @@ services:
       KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: "http://kafka-connect-01:8083"
       KAFKA_CLUSTERS_0_SCHEMAREGISTRY: "http://kafka-schema-registry:8081"
       KAFKA_CLUSTERS_0_KSQLDBSERVER: "http://ksqldb-01:8088"
-    <<: *deploy-on-front
-    <<: *network
+    <<: [*deploy-on-front, *network]
 
-  kafka-schema-registry-ui:
-    image: landoop/schema-registry-ui:${KAFKA_SCHEMA_REGISTRY_UI_VERSION}
-    ports:
-      - ${KAFKA_SCHEMA_REGISTRY_UI_PORT}:8000
-    environment:
-      SCHEMAREGISTRY_URL: http://kafka-schema-registry:8081
-      PROXY: "true"
-    <<: *deploy-on-front
-    <<: *network
-    
-  kafka-connect-ui:
-    image: landoop/kafka-connect-ui:${KAFKA_CONNECT_UI_VERSION}
-    ports:
-      - ${KAFKA_CONNECT_UI_PORT}:8000
-    environment:
-      CONNECT_URL: http://kafka-connect-01:8083
-      PROXY: "true"
-    <<: *deploy-on-front
-    <<: *network
-    
   # ksqldb-01:
   #   image: ksqldb:${KSQLDB_VERSION} # confluentinc/cp-ksql-server:${KSQL_VERSION} confluentinc/ksqldb-server:${KSQL_VERSION}
   #   hostname: ksqldb-01
@@ -313,11 +273,11 @@ services:
   #   sentrypoint: /bin/sh
   #   tty: true
   
-volumes:
-  kafka-broker-01-data:
-  kafka-broker-02-data:
-  kafka-broker-03-data:
-  kafka-controller-01-data:
-  kafka-controller-02-data:
-  kafka-controller-03-data:
-  # ksqldb-01-data:
+# volumes:
+#   kafka-broker-01-data:
+#   kafka-broker-02-data:
+#   kafka-broker-03-data:
+#   kafka-controller-01-data:
+#   kafka-controller-02-data:
+#   kafka-controller-03-data:
+#   # ksqldb-01-data:

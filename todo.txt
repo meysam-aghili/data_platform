@@ -1,28 +1,6 @@
 -------KAFKA QA
-aya port dakheli expose shode yek image baraye yek containeri ke ba compose file dg vali network yeksan oomade bala baze?
-	age are pas chra port metric exporter connect ro map kardi be biron?
-chra baazi jaha ye port ro 2bar avordi biron?
-artin kafka volumes chra yekie baraye controller ha va broker ha
-KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT mishe CONTROLLER:PLAINTEXT ro hazv kard?
-chra port internal va external kafka ro keshidi biron
-chra port controller kafka ro keshidi biron
-kafka-cli be dard mikhore
-kafka-rest be dard mikhore
-kafdrop ya kafka ui kodomesh?
-tedad partition haro chejuri mohasebe mikonid , orders chanta partition dare?
-age ye broker fail she replication factor dobare emal mishe? partition ha chi mishn?
 reconsilation chie
 get sample connector artin
-strategy consume haye mokhtalef mesle range ya sticky karbord dare?
-acks ro gozashti -1 yani chi age alle ykm tool nmikeshe?
-idempotence chie?
-az kafka transaction estefade kardi?
-data imbalance ro chejuri handle mikonid
-image ksqldb ksqldb-server ksql-server cp-ksqldb which one ?
-deadletterqueue darid?
-age kafka down she chejuri restoremiseh
-backup giri az volume ha chejuri anjam miseh
-chera cluster kafka connect darim
 fargh advertised list va lis?
 
 -------CLICKHOUSE QA
@@ -33,7 +11,6 @@ chanta broker node va keeper node darid? chanta sahrd chanta replica darid?
 az kafka engine ya sink connector?
 
 --------------------------------------
-setup kafka
 
 docker pull gcr.io/cadvisor/cadvisor:v0.46.0
 docker tag gcr.io/cadvisor/cadvisor:v0.46.0 localregistry.com/gcr.io/cadvisor/cadvisor:v0.46.0
@@ -41,20 +18,12 @@ docker push localregistry.com/gcr.io/cadvisor/cadvisor:v0.46.0
 make deploy prom
 why 2 nodes only in cadvisor global mode?
 
-fix all healthcheck
-
 visual data using metabase taha
 visual in supercet
-    add volume
-    add healthcheck
     remove init service
-multipass cluster
-    mp-host-01 registry ssl error on pull
-    config mp-host-02
-mv docker composes to each section
-
-install all plugins via dockerfile not volume sharing
 visual all prom metrics in grafana
+test all
+fix all healthcheck
 
 add logs to elk stack and visual
 add influx for time series data and visual

@@ -40,7 +40,7 @@ x-deploy-on-host-03: &deploy-on-host-03
 ##################################################################
 
 services:
-  postgres:
+  postgres2:
     image: ${POSTGRES_IMAGE}
     ports:
       - ${POSTGRES_PORT}:5432

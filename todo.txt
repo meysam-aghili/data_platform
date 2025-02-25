@@ -1,7 +1,9 @@
 -------KAFKA QA
-reconsilation chie
 get sample connector artin
-fargh advertised list va lis?
+
+tell artin
+    docker config
+    replicated-job
 
 -------CLICKHOUSE QA
 che datai too click hosue ngeah midarid ? khame orders ya agg data of orders?
@@ -12,87 +14,23 @@ az kafka engine ya sink connector?
 
 --------------------------------------
 
-docker pull gcr.io/cadvisor/cadvisor:v0.46.0
-docker tag gcr.io/cadvisor/cadvisor:v0.46.0 localregistry.com/gcr.io/cadvisor/cadvisor:v0.46.0
-docker push localregistry.com/gcr.io/cadvisor/cadvisor:v0.46.0
-make deploy prom
-why 2 nodes only in cadvisor global mode?
+metabase taha
 
-visual data using metabase taha
-visual in supercet
-    remove init service
-visual all prom metrics in grafana
-test all
-fix all healthcheck
+SETUP INFLUX DATABASE
+  REPLICATION
 
-add logs to elk stack and visual
 add influx for time series data and visual
+add logs to elk stack and visual
 add minio
 add spark
 test dagster
 ksql
 sasl and security
 
-backup from data,volumes,...
-
 
 ---------------------------
 
 "keeperOnCluster": ""
-
-CREATE DATABASE shop;
-
-CREATE TABLE shop.users
-(
-    user_id UInt32,
-    username String,
-    account_type String,
-    updated_at DateTime,
-    created_at DateTime,
-    kafka_time Nullable(DateTime),
-    kafka_offset UInt64
-)
-ENGINE = ReplacingMergeTree
-ORDER BY (user_id, updated_at)
-SETTINGS index_granularity = 8192
-
-CREATE DATABASE kafka_shop;
-
-CREATE TABLE kafka_shop.kafka__users
-(
-    user_id UInt32,
-    username String,
-    account_type String,
-    updated_at UInt64,
-    created_at UInt64
-)
-ENGINE = Kafka
-SETTINGS kafka_broker_list = 'broker:29092',
-kafka_topic_list = 'shop.public.users',
-kafka_group_name = 'clickhouse',
-kafka_format = 'AvroConfluent',
-format_avro_schema_registry_url='http://schema-registry:8081';
-
-CREATE MATERIALIZED VIEW kafka_shop.consumer__users TO shop.users
-(
-    user_id UInt32,
-    username String,
-    account_type String,
-    updated_at DateTime,
-    created_at DateTime,
-    kafka_time Nullable(DateTime),
-    kafka_offset UInt64
-) AS
-SELECT
-    user_id,
-    username,
-    account_type,
-    toDateTime(updated_at / 1000000) AS updated_at,
-    toDateTime(created_at / 1000000) AS created_at,
-    _timestamp AS kafka_time,
-    _offset AS kafka_offset
-FROM kafka_shop.kafka__users;
-
 
 {
   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",

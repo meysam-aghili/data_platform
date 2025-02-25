@@ -112,8 +112,8 @@ services:
       placement:
         constraints:
           - node.hostname == ${HOSTNAME_01}
-      restart_policy:
-        condition: on-failure
+      mode: replicated-job
+      replicas: 1
    
   superset-worker:
     <<: *superset-common

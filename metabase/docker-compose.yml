@@ -49,17 +49,30 @@ services:
       JAVA_TIMEZONE: Asia/Tehran
       MB_DB_TYPE: postgres
       MB_DB_DBNAME: metabase
-      MB_DB_PORT: 5432
+      MB_DB_PORT: 5433
       MB_DB_USER: postgres
-      MB_DB_PASS_FILE: /run/secrets/postgres_password
+      MB_DB_PASS: postgres
       MB_DB_HOST: postgres
-    secrets:
-      - postgres_password
     <<: [*network, *deploy-on-front]
     healthcheck:
       test: curl --fail -I http://localhost:3000/api/health || exit 1
       <<: *healthcheck-config
 
-secrets:
-  postgres_password:
-    external: true
+  postgres:
+    image: ${POSTGRES_IMAGE}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: metabase
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    user: postgres
+    <<: [*network, *deploy-on-front]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost", "-p", "5432"]
+      <<: *healthcheck-config
+  
+volumes:
+  postgres-data:

@@ -20,6 +20,7 @@ create-secrets:
 	printf "elasticsearch" | docker secret create elasticsearch_password -
 	cat ./docker/configs/certs/domain.key | docker secret create registry_ssl_key -
 	cat ./docker/configs/certs/domain.crt | docker secret create registry_ssl_crt -
+	printf "influxdb" | docker secret create influxdb_password -
 
 ##########################
 

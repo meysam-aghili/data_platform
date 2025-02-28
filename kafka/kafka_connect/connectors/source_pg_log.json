@@ -13,9 +13,6 @@
 		"database.server.name": "mypg",
 		"table.include.list": "logs.log_data",
 		"topic.prefix": "pg.log",
-		"transforms": "ExtractField",
-		"transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
-		"transforms.ExtractField.field": "id",
 		"tombstones.on.delete": "false",
 		"decimal.handling.mode": "double",
 		"topic.creation.default.cleanup.policy": "delete",
@@ -23,6 +20,10 @@
         "topic.creation.default.replication.factor": "1",
         "topic.creation.default.retention.ms": "604800000",
         "topic.creation.enable": "true",
-		"snapshot.mode": "initial"
+		"snapshot.mode": "initial",
+		"time.precision.mode": "connect",
+		"transforms": "ExtractField",
+		"transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+		"transforms.ExtractField.field": "id"
 	}
 }

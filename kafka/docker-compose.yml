@@ -44,7 +44,7 @@ x-kafka-common: &kafka-common
   <<: *network
 
 x-kafka-common-env: &kafka-common-env
-  KAFKA_CONTROLLER_QUORUM_VOTERS: 1001@kafka-controller-01:${KAFKA_CONTROLLER_01_PORT},1002@kafka-controller-02:${KAFKA_CONTROLLER_02_PORT},1003@kafka-controller-03:${KAFKA_CONTROLLER_03_PORT} # in case of controller failure, these can vote for new leader controller
+  KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-controller-01:${KAFKA_CONTROLLER_01_PORT},2@kafka-controller-02:${KAFKA_CONTROLLER_02_PORT},3@kafka-controller-03:${KAFKA_CONTROLLER_03_PORT} # in case of controller failure, these can vote for new leader controller
   KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
   KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
   CLUSTER_ID: YqLu9-0pSQ6QQCZqFsJlVg
@@ -105,16 +105,18 @@ services:
 
   kafka-controller-01:
     <<: [*kafka-common, *deploy-on-host-01]
+    hostname: kafka-controller-01
     ports:
       - ${KAFKA_CONTROLLER_01_PORT}:${KAFKA_CONTROLLER_01_PORT}
     # volumes:
     #   - kafka-controller-01-data:/var/lib/kafka/data
     environment:
       <<: *kafka-controller-envs
-      KAFKA_NODE_ID: 1001
+      KAFKA_NODE_ID: 1
       KAFKA_LISTENERS: CONTROLLER://:${KAFKA_CONTROLLER_01_PORT}
 
   kafka-controller-02:
+    hostname: kafka-controller-02
     <<: [*kafka-common, *deploy-on-host-02]
     ports:
       - ${KAFKA_CONTROLLER_02_PORT}:${KAFKA_CONTROLLER_02_PORT}
@@ -122,10 +124,11 @@ services:
     #   - kafka-controller-02-data:/var/lib/kafka/data
     environment:
       <<: *kafka-controller-envs
-      KAFKA_NODE_ID: 1002
+      KAFKA_NODE_ID: 2
       KAFKA_LISTENERS: CONTROLLER://:${KAFKA_CONTROLLER_02_PORT}
 
   kafka-controller-03:
+    hostname: kafka-controller-03
     <<: [*kafka-common, *deploy-on-host-03]
     ports:
       - ${KAFKA_CONTROLLER_03_PORT}:${KAFKA_CONTROLLER_03_PORT}
@@ -133,11 +136,12 @@ services:
     #   - kafka-controller-03-data:/var/lib/kafka/data
     environment:
       <<: *kafka-controller-envs
-      KAFKA_NODE_ID: 1003
+      KAFKA_NODE_ID: 3
       KAFKA_LISTENERS: CONTROLLER://:${KAFKA_CONTROLLER_03_PORT}
 
   kafka-broker-01:
     <<: [*kafka-common, *deploy-on-host-01]
+    hostname: kafka-broker-01
     ports:
       - ${KAFKA_BROKER_01_EXT_PORT}:${KAFKA_BROKER_01_EXT_PORT}
       - ${KAFKA_BROKER_01_INT_PORT}:${KAFKA_BROKER_01_INT_PORT}
@@ -145,12 +149,13 @@ services:
     #   - kafka-broker-01-data:/var/lib/kafka/data
     environment:
       <<: *kafka-broker-envs
-      KAFKA_NODE_ID: 1
+      KAFKA_NODE_ID: 4
       KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_01_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_01_EXT_PORT}
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-01:${KAFKA_BROKER_01_INT_PORT},PLAINTEXT_EXT://${HOSTIP_01}:${KAFKA_BROKER_01_EXT_PORT}
 
   kafka-broker-02:
     <<: [*kafka-common, *deploy-on-host-02]
+    hostname: kafka-broker-02
     ports:
       - ${KAFKA_BROKER_02_EXT_PORT}:${KAFKA_BROKER_02_EXT_PORT}
       - ${KAFKA_BROKER_02_INT_PORT}:${KAFKA_BROKER_02_INT_PORT}
@@ -158,12 +163,13 @@ services:
     #   - kafka-broker-02-data:/var/lib/kafka/data
     environment:
       <<: *kafka-broker-envs
-      KAFKA_NODE_ID: 2
+      KAFKA_NODE_ID: 5
       KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_02_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_02_EXT_PORT}
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-02:${KAFKA_BROKER_02_INT_PORT},PLAINTEXT_EXT://${HOSTIP_02}:${KAFKA_BROKER_02_EXT_PORT}
 
   kafka-broker-03:
     <<: [*kafka-common, *deploy-on-host-03]
+    hostname: kafka-broker-03
     ports:
       - ${KAFKA_BROKER_03_EXT_PORT}:${KAFKA_BROKER_03_EXT_PORT}
       - ${KAFKA_BROKER_03_INT_PORT}:${KAFKA_BROKER_03_INT_PORT}
@@ -171,7 +177,7 @@ services:
     #   - kafka-broker-03-data:/var/lib/kafka/data
     environment:
       <<: *kafka-broker-envs
-      KAFKA_NODE_ID: 3
+      KAFKA_NODE_ID: 6
       KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_03_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_03_EXT_PORT}
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-03:${KAFKA_BROKER_03_INT_PORT},PLAINTEXT_EXT://${HOSTIP_03}:${KAFKA_BROKER_03_EXT_PORT}
 

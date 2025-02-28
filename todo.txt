@@ -1,6 +1,6 @@
 -------KAFKA QA
+ksql image server db kodom?
 get sample connector artin
-
 tell artin
     docker config
     replicated-job
@@ -12,21 +12,25 @@ az aggmergetree estefade mikonid? ya hamon mergetree mizanid va roosh query agg 
 chanta broker node va keeper node darid? chanta sahrd chanta replica darid?
 az kafka engine ya sink connector?
 
+-------INFLUXDB QA
+vase config clusteresh bayad license dasht?
+  https://github.com/chengshiwen/influxdb-cluster
+  https://github.com/Diver2daze/influxdb_cluster/blob/enterprise-images/docker-compose.yml
+
 --------------------------------------
 
 metabase taha
-
-SETUP INFLUX DATABASE
-  REPLICATION
-
 add influx for time series data and visual
+ZABBIX
+splunk
 add logs to elk stack and visual
 add minio
 add spark
 test dagster
 ksql
-sasl and security
 
+nginx haproxy Traefik 
+sasl and security
 
 ---------------------------
 

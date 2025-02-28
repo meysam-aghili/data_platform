@@ -21,6 +21,7 @@ create-secrets:
 	cat ./docker/configs/certs/domain.key | docker secret create registry_ssl_key -
 	cat ./docker/configs/certs/domain.crt | docker secret create registry_ssl_crt -
 	printf "influxdb" | docker secret create influxdb_password -
+	printf "FMZ6bCX2QekeXOGPfctfRATHAFzkWaFBx-rbq1nhTyYvsdJ-DrClTI_1l2Vc_bjqJwmGYYO3dWdc5lfIxnFQYA==" | docker secret create influxdb_admin_token -
 
 ##########################
 
@@ -57,3 +58,7 @@ deploy-kafka:
 	docker push localregistry.com/confluentinc/cp-kafka-prod:7.8.0
 	docker push localregistry.com/confluentinc/cp-kafka-connect-prod:7.8.0
 	./deploy-stack.sh kafka
+
+deploy-influxdb:
+	./deploy-stack.sh influxdb
+

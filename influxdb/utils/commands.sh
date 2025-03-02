@@ -1,0 +1,2 @@
+# drop a measurement
+influx delete --bucket "default" --predicate '_measurement="pg.iot.sensors.sensor_data"' -o DataPlatform --start '1970-01-01T00:00:00Z' --stop '2025-12-31T23:59:00Z' --token "FMZ6bCX2QekeXOGPfctfRATHAFzkWaFBx-rbq1nhTyYvsdJ-DrClTI_1l2Vc_bjqJwmGYYO3dWdc5lfIxnFQYA=="

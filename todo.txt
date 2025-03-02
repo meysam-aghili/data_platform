@@ -19,8 +19,12 @@ vase config clusteresh bayad license dasht?
 
 --------------------------------------
 
+network docker swarm problem
 metabase taha
 add influx for time series data and visual
+  write sink connector
+crateDB
+apache flink
 ZABBIX
 splunk
 add logs to elk stack and visual

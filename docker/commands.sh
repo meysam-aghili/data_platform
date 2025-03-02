@@ -41,3 +41,13 @@ done
 docker swarm init --advertise-addr "172.20.65.42"
 docker swarm join-token worker
 docker swarm join --token SWMTKN-1-4pezkspxru37upoux3xv1yzvpnk56r2jinyot9pn1zqs2dng0c-epzekc49ivlexdv03ey291a8i 172.20.65.42:2377
+
+# allow essential ports for docker swarm communication
+sudo ufw allow 2377/tcp
+sudo ufw allow 7946/tcp
+sudo ufw allow 7946/udp
+sudo ufw allow 4789/udp
+
+
+# Allow all listening ports
+sudo ufw disable

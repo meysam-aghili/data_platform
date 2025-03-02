@@ -6,12 +6,12 @@ remove-all-volumes:
 	docker volume rm $$(docker volume ls -q) && docker volume prune -f
 
 create-kafka-connectors:
-	./kafka_connect/create_connectors.sh d
+	./kafka/kafka_connect/create_connectors.sh d
 
 init-pg-tables:
-	python ./postgres/generate_data.py -delete -initdb
+	python ./postgres/utils/generate_data.py -delete -initdb
 generate-data-pg-tables:
-	python ./postgres/generate_data.py -gen
+	python ./postgres/utils/generate_data.py -gen
 
 create-secrets:
 	printf "postgres" | docker secret create postgres_password -

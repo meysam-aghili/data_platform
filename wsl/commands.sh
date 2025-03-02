@@ -6,3 +6,6 @@ wsl hostname -I
 
 # generate token
 openssl rand -base64 32
+
+# see listening ports
+sudo netstat -tulpn | grep LISTEN

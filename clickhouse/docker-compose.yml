@@ -120,16 +120,16 @@ volumes:
 
 configs:
   clickhouse-node-01-config:
-    file: ./config/clickhouse-node-01/config.xml
+    file: ./config/clickhouse-node-01.xml
   clickhouse-node-02-config:
-    file: ./config/clickhouse-node-02/config.xml
+    file: ./config/clickhouse-node-02.xml
   clickhouse-keeper-01-config:
-    file: ./config/clickhouse-keeper-01/keeper_config.xml
+    file: ./config/clickhouse-keeper-01.xml
   clickhouse-keeper-02-config:
-    file: ./config/clickhouse-keeper-02/keeper_config.xml
+    file: ./config/clickhouse-keeper-02.xml
   clickhouse-keeper-03-config:
-    file: ./config/clickhouse-keeper-03/keeper_config.xml
+    file: ./config/clickhouse-keeper-03.xml
   clickhouse-chproxy-config:
-    file: ./config/chproxy/config.yml
+    file: ./config/chproxy.yml
   clickhouse-users:
     file: ./config/users.xml

@@ -18,21 +18,16 @@ vase config clusteresh bayad license dasht?
   https://github.com/Diver2daze/influxdb_cluster/blob/enterprise-images/docker-compose.yml
 
 --------------------------------------
-
-network docker swarm problem
-metabase taha
-add influx for time series data and visual
-  write sink connector
-crateDB
-apache flink
-ZABBIX
-splunk
-add logs to elk stack and visual
-add minio
 add spark
+apache flink
+add logs to elk stack and visual
+splunk
+add minio
+network docker swarm problem for kafka
+metabase taha
+write kafka to influxdb sink connector
 test dagster
 ksql
-
 nginx haproxy Traefik 
 sasl and security
 

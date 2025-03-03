@@ -74,3 +74,11 @@ scrape_configs:
         'clickhouse-node-01:9126',
         'clickhouse-node-02:9126'
         ]
+
+  - job_name: cratedb
+    static_configs:
+      - targets: [
+        'cratedb-node-01:7979',
+        'cratedb-node-02:7979',
+        'cratedb-node-03:7979'
+        ]

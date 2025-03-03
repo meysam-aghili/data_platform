@@ -62,3 +62,7 @@ deploy-kafka:
 deploy-influxdb:
 	./deploy-stack.sh influxdb
 
+deploy-cratedb:
+	docker build -t localregistry.com/crate-prod:5.10.1 ./cratedb/
+	docker push localregistry.com/crate-prod:5.10.1
+	./deploy-stack.sh cratedb

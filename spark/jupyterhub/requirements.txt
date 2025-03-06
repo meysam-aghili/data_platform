@@ -1,0 +1,6 @@
+dockerspawner
+swarmspawner
+jupyterhub-ldapauthenticator
+requests
+pydantic
+pyodbc

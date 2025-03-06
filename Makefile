@@ -66,3 +66,12 @@ deploy-cratedb:
 	docker build -t localregistry.com/crate-prod:5.10.1 ./cratedb/
 	docker push localregistry.com/crate-prod:5.10.1
 	./deploy-stack.sh cratedb
+
+deploy-spark:
+	docker build -t localregistry.com/bitnami/spark-prod:3.5.5 ./spark/
+	docker push localregistry.com/bitnami/spark-prod:3.5.5
+	docker build -t localregistry.com/jupyterhub/jupyterhub-prod:5.2.1 ./spark/jupyterhub/
+	docker push localregistry.com/jupyterhub/jupyterhub-prod:5.2.1
+	docker build -t localregistry.com/jupyterhub/jupyterhub-pyspark-prod:3.5.5 ./spark/jupyterhub/notebook/pyspark/
+	docker push localregistry.com/jupyterhub/jupyterhub-pyspark-prod:3.5.5
+	./deploy-stack.sh spark

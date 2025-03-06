@@ -17,11 +17,19 @@ vase config clusteresh bayad license dasht?
   https://github.com/chengshiwen/influxdb-cluster
   https://github.com/Diver2daze/influxdb_cluster/blob/enterprise-images/docker-compose.yml
 
--------INFLUXDB QA
+-------SPARK QA
 vaghti ye read va transformation dsitributed anjam mishe va mikhaym write konim aya har worker joda write mikone ya ghablesh collect mikone?
-
+SPARKDAEMON_MEMORY chie ? nist too docs
+chera spark logs ro volume kardi?
+chanta master nmizaran?
+chra az ADD bejaye COPY?
+BIHUB_REPO_ID chie too jupyterhub compose ?
+proxy jupyterhub vase chi gozashti?
+tell artin about hostname jupyterhub and proxy
 
 --------------------------------------
+make deploy-spark
+
 add spark
 apache flink
 add logs to elk stack and visual
@@ -30,6 +38,7 @@ add minio
 network docker swarm problem for kafka
 metabase taha
 write kafka to influxdb sink connector
+hadoop
 test dagster
 ksql
 nginx haproxy Traefik 

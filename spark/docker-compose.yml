@@ -83,14 +83,14 @@ services:
           memory: 1G
           cpus: "1.0"
 
-  # spark-connect:
-  #   <<: [*spark-common, *network, *deploy-on-front]
-  #   ports:
-  #     - 10003:4040
-  #     - ${SPARK_CONNECT_PORT}:15002
-  #   environment:
-  #     <<: *spark-master-common-env
-  #   command: ["bash", "-c", "/opt/bitnami/spark/sbin/start-connect-server.sh --jars /opt/bitnami/spark/jars/spark-connect_2.12-3.5.1.jar"]
+  spark-connect:
+    <<: [*spark-common, *network, *deploy-on-front]
+    ports:
+      - ${SPARK_CONNECT_UI_PORT}:4040
+      - ${SPARK_CONNECT_PORT}:15002
+    environment:
+      <<: *spark-master-common-env
+    command: ["bash", "-c", "/opt/bitnami/spark/sbin/start-connect-server.sh --jars /opt/bitnami/spark/jars/spark-connect_2.12-3.5.1.jar"]
 
   spark-jupyterhub:
     image: ${JUPYTERHUB_IMAGE}
@@ -114,7 +114,7 @@ services:
     image: ${JUPYTERHUB_PROXY_IMAGE}
     hostname: spark-jupyterhub-proxy
     ports:
-      - ${JUPYTERHUB_PORT}:8000
+      - ${JUPYTERHUB_PROXY_PORT}:8000
     command: ["configurable-http-proxy", "--error-target", "http://spark-jupyterhub/hub/error"]
     <<: [*network, *deploy-on-front]
 

@@ -1,9 +1,0 @@
-FROM localregistry.com/bitnami/spark-prod:3.5.5
-USER root
-RUN apt-get update && apt-get install -y nano curl unixodbc \
-    && mkdir -p /work \
-    && chmod 777 -R /work
-USER 1001
-WORKDIR /root
-COPY spark-requirements.txt .
-RUN pip install -i https://mirror-pypi.runflare.com/simple -r spark-requirements.txt

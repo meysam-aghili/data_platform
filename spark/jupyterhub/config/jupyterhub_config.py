@@ -3,6 +3,8 @@ import requests
 import logging
 import subprocess
 import ast
+import sys
+
 
 # https://jupyterhub-dockerspawner.readthedocs.io/en/latest/api/index.html
 
@@ -17,7 +19,7 @@ def get_notebook_images():
         subprocess.run(["curl", "-k", "https://registry/v2/_catalog"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout
         )["repositories"]
     for image in images:
-        if "jupyterhub" in image:
+        if "notebook" in image:
             tags = ast.literal_eval(
                 subprocess.run(["curl", "-k", f"https://registry/v2/{image}/tags/list"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).stdout
             )["tags"]
@@ -47,6 +49,7 @@ c.JupyterHub.log_level = logging.DEBUG
 c.JupyterHub.hub_ip = '0.0.0.0'
 c.JupyterHub.hub_connect_ip = 'spark-jupyterhub'
 c.JupyterHub.spawner_class = 'dockerspawner.SwarmSpawner'
+c.DockerSpawner.prefix = 'jupyterhub'
 c.DockerSpawner.options_form = image_selector
 c.DockerSpawner.allowed_images = '*'
 c.DockerSpawner.image = os.environ.get('DOCKER_NOTEBOOK_IMAGE')
@@ -54,6 +57,8 @@ c.DockerSpawner.cmd = [ 'jupyterhub-singleuser', '--allow-root' ]
 c.DockerSpawner.notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR')
 c.SwarmSpawner.network_name = os.environ.get('DOCKER_NETWORK_NAME')
 c.SwarmSpawner.spawn_timeout = 60
+c.DockerSpawner.remove = True
+c.DockerSpawner.remove_containers = True
 c.DockerSpawner.volumes = {
     os.environ.get('HOST_NOTEBOOKS_DIR')+'/notebooks-{username}': os.environ.get('DOCKER_NOTEBOOK_DIR')
 }
@@ -83,3 +88,29 @@ c.JupyterHub.authenticator_class = 'dummy'
 # c.LDAPAuthenticator.user_search_base = os.getenv('LDAP_SEARCH_BASE')
 # c.LDAPAuthenticator.user_attribute = os.getenv('LDAP_USER_ATTR')
 # c.LDAPAuthenticator.admin_users = { 'artin.zamani', 'm.bolhasani' }
+
+c.JupyterHub.load_roles = [
+    {
+        "name": "jupyterhub-idle-culler-role",
+        "scopes": [
+            "list:users",
+            "read:users:activity",
+            "read:servers",
+            "delete:servers",
+            # "admin:users", # if using --cull-users
+        ],
+        # assignment of role's permissions to:
+        "services": ["jupyterhub-idle-culler-service"],
+    }
+]
+c.JupyterHub.services = [
+    {
+        "name": "jupyterhub-idle-culler-service",
+        "command": [
+            sys.executable,
+            "-m", "jupyterhub_idle_culler",
+            "--timeout=3600",
+        ],
+        # "admin": True,
+    }
+]

@@ -25,10 +25,12 @@ chanta master nmizaran?
 chra az ADD bejaye COPY?
 BIHUB_REPO_ID chie too jupyterhub compose ?
 proxy jupyterhub vase chi gozashti?
-tell artin about hostname jupyterhub and proxy
+tell artin 
+  about hostname jupyterhub and proxy
+  idle remover
 
 --------------------------------------
-make deploy-spark
+connect to spark
 
 add spark
 apache flink

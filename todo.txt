@@ -28,7 +28,7 @@ proxy jupyterhub vase chi gozashti?
 tell artin 
   about hostname jupyterhub and proxy
   idle remover
-
+fargh spark context va session
 --------------------------------------
 connect to spark
 

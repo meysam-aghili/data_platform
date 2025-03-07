@@ -1,6 +1,8 @@
 from pyspark.sql import SparkSession
+from pyspark import SparkConf, SparkContext
 from pyspark.sql.functions import window, column, desc, col, lit
 from pyspark.sql.types import StructField, StructType, StringType, LongType
+import collections
 
 
 spark = SparkSession.builder \
@@ -40,6 +42,14 @@ myManualSchema = StructType([
 df = spark.read.format("json").schema(myManualSchema) \
 .load("/data/flight-data/json/2015-summary.json")
 
+conf = SparkConf().setMaster("spark-master").setAppName("demo test")
+sc = SparkContext(conf=conf)
+lines = sc.textFile("file:///SparkCourse/ml-100k/u.data")
+ratings = lines.map(lambda x: x.split()[2])
+result = ratings.countByValue()
+sortedResult = collections.OrderedDict(sorted(result.items()))
+for key, value in sortedResult.iteritems():
+    print(key, " ", value)
 
 ################ Streaming
 

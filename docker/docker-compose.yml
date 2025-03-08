@@ -52,6 +52,7 @@ services:
   registry:
     # doc https://gabrieltanner.org/blog/docker-registry/
     image: ${REGISTRY_IMAGE}
+    hostname: registry
     ports:
       - ${REGISTRY_PORT}:443
     volumes:

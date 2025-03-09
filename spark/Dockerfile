@@ -30,6 +30,9 @@ RUN curl \
     --remote-name https://repo1.maven.org/maven2/org/apache/spark/spark-avro_${MAVEN_PACKAGE_VERSION}/${SPARK_VERSION}/spark-avro_${MAVEN_PACKAGE_VERSION}-${SPARK_VERSION}.jar \
     --remote-name https://repo1.maven.org/maven2/org/apache/spark/spark-connect_${MAVEN_PACKAGE_VERSION}/${SPARK_VERSION}/spark-connect_${MAVEN_PACKAGE_VERSION}-${SPARK_VERSION}.jar \
     --remote-name https://repo1.maven.org/maven2/io/delta/delta-spark_${MAVEN_PACKAGE_VERSION}/3.2.0/delta-spark_${MAVEN_PACKAGE_VERSION}-3.2.0.jar \
-    --remote-name https://repo1.maven.org/maven2/io/delta/delta-storage/3.2.0/delta-storage-3.2.0.jar 
+    --remote-name https://repo1.maven.org/maven2/io/delta/delta-storage/3.2.0/delta-storage-3.2.0.jar \
+    --remote-name https://repo1.maven.org/maven2/net/sourceforge/jtds/jtds/1.3.1/jtds-1.3.1.jar \
+    --remote-name https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/12.6.1.jre11/mssql-jdbc-12.6.1.jre11.jar \
+    --remote-name https://jdbc.postgresql.org/download/postgresql-42.7.5.jar
 COPY --from=maven /dependencies/jars/*.jar ${SPARK_HOME}/jars/
 WORKDIR ${SPARK_HOME}

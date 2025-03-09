@@ -94,7 +94,7 @@ services:
       - ${SPARK_CONNECT_PORT}:15002
     environment:
       <<: *spark-master-common-env
-    command: ["bash", "-c", "/opt/bitnami/spark/sbin/start-connect-server.sh --jars /opt/bitnami/spark/jars/spark-connect_2.13-3.5.0.jar"]
+    command: ["bash", "-c", "/opt/bitnami/spark/sbin/start-connect-server.sh --jars /opt/bitnami/spark/jars/spark-connect_2.12-3.5.0.jar"]
 
   spark-jupyterhub:
     image: ${JUPYTERHUB_IMAGE}

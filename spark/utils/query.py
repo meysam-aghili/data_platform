@@ -51,6 +51,9 @@ sortedResult = collections.OrderedDict(sorted(result.items()))
 for key, value in sortedResult.iteritems():
     print(key, " ", value)
 
+df.select(coalesce(col("Description"), col("CustomerId"))).show()6
+df.repartition(5, col("DEST_COUNTRY_NAME")).coalesce(2)
+
 ################ Streaming
 
 streamingDataFrame = spark.readStream \

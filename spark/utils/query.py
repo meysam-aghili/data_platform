@@ -51,6 +51,19 @@ sortedResult = collections.OrderedDict(sorted(result.items()))
 for key, value in sortedResult.iteritems():
     print(key, " ", value)
 
+
+
+
+
+
+
+def square(x):
+    return x*x
+
+spark.udf.register("square", square, Integertype())
+df = spark.sql("select square(2) as a")
+
+
 df.select(coalesce(col("Description"), col("CustomerId"))).show()6
 df.repartition(5, col("DEST_COUNTRY_NAME")).coalesce(2)
 

@@ -1,0 +1,56 @@
+﻿@inject ISnackbar _snack
+
+<AppModal @bind-IsOpen="IsOpen" Height="240px" Width="40%" OnDismiss="async () => { IsOpen = false; await IsOpenChanged.InvokeAsync(false); }">
+    <BitGrid Columns="1" HorizontalSpacing="2rem" VerticalSpacing="1rem">
+
+        <BitGridItem>
+            <BitText Typography="BitTypography.H6" Class="modal-header">
+                Delete @ItemName?
+            </BitText>
+        </BitGridItem>
+
+        @if (ItemName is not null)
+        {
+            <BitGridItem>
+                    Type <b>@ItemName</b> in the box below.
+            </BitGridItem>
+
+            <BitGridItem>
+                <BitTextField @bind-Value="ConfirmationText"></BitTextField>
+            </BitGridItem>
+        }
+
+        <BitGridItem>
+            <BitButton Variant="BitVariant.Outline" OnClick="ConfirmDelete" IsEnabled="ConfirmationText == ItemName">Delete</BitButton>
+        </BitGridItem>        
+
+    </BitGrid>
+</AppModal>
+
+@code {
+    [Parameter]
+    public bool IsOpen { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public string? ItemName { get; set; } = null;
+
+    [Parameter]
+    public EventCallback<string> OnConfirm { get; set; }
+
+    [Parameter]
+    public string ConfirmationText { get; set; } = string.Empty;
+
+    public async Task ConfirmDelete()
+    {
+        if (ConfirmationText != ItemName)
+        {
+            _snack.Add("Input is wrong.", Severity.Error);
+            return;
+        }
+        await OnConfirm.InvokeAsync();
+        IsOpen = false;
+    }
+}

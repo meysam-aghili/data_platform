@@ -1,0 +1,24 @@
+# admin user
+dn: cn=admin,dc=dataplatform,dc=com
+changetype: add
+objectClass: simpleSecurityObject
+objectClass: organizationalRole
+cn: admin
+userPassword: adminpassword
+description: LDAP Administrator
+
+# organisational unit for IT department
+dn: ou=IT,dc=dataplatform,dc=com
+changetype: add
+objectClass: organizationalUnit
+ou: IT
+
+# user: meysam aghili for unit IT department
+dn: uid=maghili,ou=IT,dc=dataplatform,dc=com
+changetype: add
+objectClass: inetOrgPerson
+cn: meysam aghili
+sn: aghili
+uid: maghili
+mail: maghili@dataplatform.com
+userPassword: 123

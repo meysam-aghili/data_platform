@@ -75,3 +75,20 @@ deploy-spark:
 	docker build -t localregistry.com/jupyter/pyspark-notebook:x86_64-spark-3.5.0 ./spark/jupyterhub/notebook/pyspark/
 	docker push localregistry.com/jupyter/pyspark-notebook:x86_64-spark-3.5.0
 	./deploy-stack.sh spark
+
+deploy-ldap:
+	./deploy-stack.sh ldap
+
+deploy-mongo:
+	./deploy-stack.sh mongo
+
+deploy-mssql:
+	./deploy-stack.sh mssql
+
+deploy-elk:
+	./deploy-stack.sh elk
+
+deploy-api-dotnet:
+	docker stack rm platform-WebApi
+	docker build -t localregistry.com/dotnet/webapi:1.0.0 ./api/dotnet/WebApi/
+	./deploy-stack.sh WebApi ./api/dotnet

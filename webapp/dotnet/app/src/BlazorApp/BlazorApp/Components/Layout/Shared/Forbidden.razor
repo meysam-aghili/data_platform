@@ -1,0 +1,29 @@
+﻿<PageTitle>Forbidden</PageTitle>
+
+<BitGrid Columns="1" HorizontalAlign="BitAlignment.Center" VerticalSpacing="1rem" Style="padding-top: 20vh;">
+    <BitGridItem>
+        <BitText Typography="BitTypography.H3" Align="BitTextAlign.Center" Style="_headerStyle">
+            <code style="font-family: VictorMono; font-weight: 600;">
+                Forbidden
+            </code>
+        </BitText>
+    </BitGridItem>
+    <BitGridItem>
+        <BitText Typography="BitTypography.Subtitle1" Align="BitTextAlign.Center" Style="font-weight: 300;">
+            @_messages.RandomElement()
+        </BitText>
+    </BitGridItem>
+</BitGrid>
+
+@code {
+    [CascadingParameter]
+    public BitTheme Theme { get; set; }
+
+    string _headerStyle => $"color: {Theme.Color.Primary.MainActive};";
+
+    List<string> _messages = [
+        "You like going to places you're not supposed to, eh?",
+        "You shall not pass!",
+        "One does not simply walk into this kind of URLs..."
+    ];
+}

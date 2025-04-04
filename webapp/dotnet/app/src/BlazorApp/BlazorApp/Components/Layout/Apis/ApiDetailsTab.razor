@@ -1,0 +1,97 @@
+﻿@using BlazorApp.Models
+@using BlazorApp.Services.Auth
+@using BlazorApp.Services.Sql
+@using BlazorApp.Shared
+
+<MudPaper Class="pa-4">
+    <BitGrid Columns="12" VerticalSpacing="2rem" HorizontalSpacing="1rem">
+
+        <BitGridItem ColumnSpan="12">
+            <BitGrid Columns="12" Class="px-4" HorizontalSpacing="2rem" VerticalSpacing="1rem">
+
+                <BitGridItem ColumnSpan="12">
+                    <BitSeparator AlignContent="BitSeparatorAlignContent.Start">
+                        <BitText Typography="BitTypography.H6"><code>Service URI</code></BitText>
+                    </BitSeparator>
+                </BitGridItem>
+
+                <BitGridItem ColumnSpan="12">
+                    <BitText Typography="BitTypography.Body2">
+                        Your API URI.
+                    </BitText>
+                </BitGridItem>
+
+                <BitGridItem ColumnSpan="6">
+                    <BitTextField @bind-Value="Api.Slug" Label="Slug" ReadOnly />
+                </BitGridItem>
+                <BitGridItem ColumnSpan="6">
+                    <BitDropdown @bind-Value="Api.Method"
+                                 ReadOnly
+                                 Label="Method"
+                                 Items="RazorExtension.GetEnumValuesAsBitDropdownItems<ApiHttpMethod>()" />
+                </BitGridItem>
+                <BitGridItem ColumnSpan="12">
+                    <BitTextField Value="@($"https://biapi.digikala.com/api/{Api.Slug}")" Label="URL" ReadOnly />
+                </BitGridItem>
+
+            </BitGrid>
+        </BitGridItem>
+
+        <BitGridItem ColumnSpan="12">
+            <BitGrid Columns="12" Class="px-4" HorizontalSpacing="2rem" VerticalSpacing="1rem">
+                
+                <BitGridItem ColumnSpan="12">
+                    <BitSeparator AlignContent="BitSeparatorAlignContent.Start">
+                        <BitText Typography="BitTypography.H6"><code>Stored Procedure</code></BitText>
+                    </BitSeparator>
+                </BitGridItem>
+
+                <BitGridItem ColumnSpan="12">
+                    <BitText Typography="BitTypography.Body2">
+                        Choose the underlying stored-procedure for your API. The first result-set of the API will be the data
+                        that your API returns. You can also define input parameters; the caller of your API can pass them as
+                        query variables.
+                    </BitText>
+                </BitGridItem>
+
+                <BitGridItem ColumnSpan="12">
+                    <StoredProcedureSelector @bind-Api="Api" />
+                </BitGridItem>
+
+            </BitGrid>
+        </BitGridItem>
+
+        <BitGridItem ColumnSpan="12">
+            <BitGrid Columns="1" Class="px-4" HorizontalSpacing="2rem" VerticalSpacing="1rem">
+                    
+                <BitGridItem>
+                    <BitSeparator AlignContent="BitSeparatorAlignContent.Start">
+                        <BitText Typography="BitTypography.H6"><code>Authorized Users</code></BitText>
+                    </BitSeparator>
+                </BitGridItem>
+
+                <BitGridItem>
+                    <BitText Typography="BitTypography.Body2">
+                        You don't need to add your own user to the list,
+                        the API author is authorized by default.
+                    </BitText>
+                </BitGridItem>
+                
+                <BitGridItem>
+                    <LdapSelect @bind-Users="AuthorizedUsers"
+                                  IncludeSamIds
+                                  Label=""
+                                  SearchBase="_ldapSearchBases" />
+                </BitGridItem>
+
+            </BitGrid>
+        </BitGridItem>
+
+        <BitGridItem ColumnSpan="12">
+            <BitButton FullWidth Styles="_btnStyles" OnClick="UpdateApi">
+                Update API
+            </BitButton>
+        </BitGridItem>
+
+    </BitGrid>
+</MudPaper>

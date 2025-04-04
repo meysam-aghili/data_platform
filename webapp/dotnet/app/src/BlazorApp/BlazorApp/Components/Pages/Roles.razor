@@ -1,0 +1,87 @@
+﻿@page "/roles"
+@using BlazorApp.Models
+@using BlazorApp.Services
+@using BlazorApp.Services.Mongo
+@using BlazorApp.Shared
+@using BlazorApp.Services.Auth
+@inject IRoleRepository _roles
+@inject ISnackbar _snack
+
+@attribute [Authorize(Roles = $"{RoleNames.Admin}")]
+
+<PageTitle>Roles</PageTitle>
+
+<MudContainer Class="my-8 px-8">
+    <BitPivot @ref="_pivot">
+        <BitPivotItem HeaderText="Roles" Key="list">
+            <RolesTable @bind-SelectedRole="_role" CreateNewClicked="() => _isNewRolePaneOpen = true" />
+        </BitPivotItem>
+        @if (_role is not null)
+        {
+            <BitPivotItem HeaderText="@_role.Slug" Key="selected">
+                <RoleDetailsTab Role="_role" CloseTabRequested="SwtichToList" />
+            </BitPivotItem>
+        }
+    </BitPivot>
+</MudContainer>
+
+<AppModal @bind-IsOpen="_isNewRolePaneOpen">
+    <BitText Typography="BitTypography.H5" Class="mb-4">Create New Role</BitText>
+    <BitGrid Columns="12" VerticalSpacing="1rem" HorizontalSpacing="1rem">
+        <BitGridItem ColumnSpan="12">
+            <BitTextField @bind-Value="_newRoleSlug" OnChange="() => _newRoleSlug = _newRoleSlug.ToSlug()" Label="Slug"></BitTextField>
+        </BitGridItem>
+        <BitGridItem ColumnSpan="12">
+            <LdapSelect @bind-Users="_newRoleUsers" />
+        </BitGridItem>
+
+        <BitGridItem ColumnSpan="12">
+            <BitButton FullWidth Class="mt-3" OnClick="CreateRoleAsync" Styles="_btnStyles" IsLoading="_isLoading">Create</BitButton>
+        </BitGridItem>
+    </BitGrid>
+</AppModal>
+
+@code {
+    [CascadingParameter]
+    public BitTheme Theme { get; set; }
+
+    private BitPivot _pivot = default!;
+
+    private RoleModel? _role;
+    private string _newRoleSlug = string.Empty;
+    private IEnumerable<LdapUserModel> _newRoleUsers = [];
+
+    private bool _isNewRolePaneOpen = false;
+    private bool _isLoading = false;
+
+    private BitButtonClassStyles _btnStyles = new()
+        {
+            Primary = "margin-top: .5em; margin-bottom: .5em;",
+            LoadingContainer = "margin-top: .5em; margin-bottom: .5em;",
+            LoadingLabel = "margin-top: .5em; margin-bottom: .5em;"
+        };
+
+    private void SwtichToList()
+    {
+        _pivot.AssignSelectedKey("list");
+        _role = null;
+    }
+
+    private async Task CreateRoleAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            await _roles.CreateRoleAsync(_newRoleSlug.ToSlug(), _newRoleUsers);
+            _isLoading = false;
+            _snack.Add("Role created.", Severity.Success);
+            _isNewRolePaneOpen = false;
+            StateHasChanged();
+        }
+        catch
+        {
+            _isLoading = false;
+            _snack.Add("Couldn't create role.", Severity.Error);
+        }
+    }
+}

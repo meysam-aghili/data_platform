@@ -1,0 +1,93 @@
+﻿@using BlazorApp.Models
+@using BlazorApp.Shared
+@using BlazorApp.Services
+
+<MudPaper Class="px-4 py-6">
+    <MudGrid>
+        <MudItem xs="10">
+            <BitChart Config="histConfig" @ref="histChart"></BitChart>
+        </MudItem>
+        <MudItem xs="2">
+            <MudCard Outlined>
+                <MudCardContent>
+                    <MudText Typo="Typo.caption">Total Hits in Prev 30 Days</MudText>
+                    <MudText Typo="Typo.body1">@TotalHits.ToCommaSeparatedString()</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    [Parameter]
+    public ApiBsonDocument? Api { get; set; }
+
+    [Inject]
+    private IApiLogRepository Logs { get; set; } = default!;
+
+    private List<Dictionary<string, object>> Data { get; set; } = [];
+    private int TotalHits { get; set; }
+
+    private BitChart histChart = default!;
+    private BitChartBarConfig histConfig = new() { Options = chartOptions };
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Api is null)
+        {
+            throw new ArgumentNullException(nameof(Api));
+        }
+
+        Data = await Logs.GetPrevious30DaysUsageAsync(Api.Slug!);
+        TotalHits = (from datum in Data select int.Parse(datum["count"]?.ToString() ?? throw new Exception())).Sum();
+        UpdatePlots();
+    }
+
+    private void UpdatePlots()
+    {
+        histConfig.Data.Labels.Clear();
+        histConfig.Data.Labels.AddRange((from datum in Data select datum["date"].ToString()).ToList());
+        histConfig.Data.Datasets.Clear();
+        histConfig.Data.Datasets.Add(new BitChartBarDataset<int>(
+            (
+                from datum in Data
+                select int.Parse(datum["count"]?.ToString() ?? throw new Exception())
+            ).ToList())
+        {
+            Label = "# Hits",
+            BackgroundColor = BitChartColorUtil.FromDrawingColor(System.Drawing.Color.FromArgb(160, 0, 223, 201))
+        });
+    }
+
+    private static readonly BitChartBarOptions chartOptions = new()
+    {
+        Responsive = true,
+        Title = new BitChartOptionsTitle
+        {
+            Display = true,
+            Text = "Hits in previous 30 days"
+        },
+        Tooltips = new BitChartTooltips
+        {
+            Mode = BitChartInteractionMode.Index,
+            Intersect = false
+        },
+        Scales = new BitChartBarScales
+        {
+            XAxes = new List<BitChartCartesianAxis>
+            {
+                new BitChartBarCategoryAxis
+                {
+                    Stacked = true
+                }
+            },
+            YAxes = new List<BitChartCartesianAxis>
+            {
+                new BitChartBarLinearCartesianAxis
+                {
+                    Stacked = false
+                }
+            }
+        }
+    };
+}

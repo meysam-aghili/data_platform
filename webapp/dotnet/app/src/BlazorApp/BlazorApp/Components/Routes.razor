@@ -1,0 +1,45 @@
+﻿@using System.Security.Claims
+
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" >
+                <NotAuthorized> 
+                     @if (_user?.Identity is not null && _user.Identity.IsAuthenticated)
+                     {
+                         <Forbidden /> 
+                     } 
+                     else 
+                     { 
+                         <RedirectToLogin /> 
+                     } 
+                 </NotAuthorized> 
+             </AuthorizeRouteView> 
+            <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="@typeof(Layout.MainLayout)">
+                <NotFound />
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>
+
+@code
+{
+    [CascadingParameter]
+    public Task<AuthenticationState>? _authState { get; set; }
+
+    private ClaimsPrincipal? _user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (_authState is not null)
+        {
+            var authState = await _authState;
+            _user = authState?.User;
+        }
+    }
+}

@@ -1,0 +1,173 @@
+﻿@using BlazorApp.Models
+@using BlazorApp.Services
+@using BlazorApp.Shared
+@inject IApiRepository _apis
+@inject ISnackbar _snack
+
+<AppModal @bind-IsOpen="IsOpen" OnDismiss="async () => { IsOpen = false; await IsOpenChanged.InvokeAsync(false); }">
+    <BitGrid Columns="12" VerticalSpacing="2rem" HorizontalSpacing="1rem">
+
+        <BitGridItem ColumnSpan="12">
+            <BitGrid Columns="12" Class="px-4" HorizontalSpacing="2rem" VerticalSpacing="1rem">
+
+                <BitGridItem ColumnSpan="12">
+                    <BitSeparator AlignContent="BitSeparatorAlignContent.Start">
+                        <BitText Typography="BitTypography.H6"><code>Service URI</code></BitText>
+                    </BitSeparator>
+                </BitGridItem>
+
+                <BitGridItem ColumnSpan="12">
+                    <BitText Typography="BitTypography.Body2">
+                        Your API URI.
+                    </BitText>
+                </BitGridItem>
+
+                <BitGridItem ColumnSpan="6">
+                    <BitTextField @bind-Value="_api.Slug" Label="Slug" OnChange="() => _api.Slug = _api.Slug.ToSlug()" />
+                </BitGridItem>
+                <BitGridItem ColumnSpan="6">
+                    <BitDropdown @bind-Value="_api.Method"
+                    ReadOnly
+                    Label="Method"
+                    Items="RazorExtension.GetEnumValuesAsBitDropdownItems<ApiHttpMethod>()" />
+                </BitGridItem>
+                <BitGridItem ColumnSpan="12">
+                    <BitTextField Value="@($"https://biapi.digikala.com/api/{_api.Slug}")" Label="URL" ReadOnly />
+                </BitGridItem>
+
+            </BitGrid>
+        </BitGridItem>
+
+        <BitGridItem ColumnSpan="12">
+            <BitGrid Columns="12" Class="px-4" HorizontalSpacing="2rem" VerticalSpacing="1rem">
+
+                <BitGridItem ColumnSpan="12">
+                    <BitSeparator AlignContent="BitSeparatorAlignContent.Start">
+                        <BitText Typography="BitTypography.H6"><code>Stored Procedure</code></BitText>
+                    </BitSeparator>
+                </BitGridItem>
+
+                <BitGridItem ColumnSpan="12">
+                    <BitText Typography="BitTypography.Body2">
+                        Choose the underlying stored-procedure for your API. The first result-set of the API will be the data
+                        that your API returns. You can also define input parameters; the caller of your API can pass them as
+                        query variables.
+                    </BitText>
+                </BitGridItem>
+
+                <BitGridItem ColumnSpan="12">
+                    <StoredProcedureSelector @bind-Api="_api" />
+                </BitGridItem>
+
+            </BitGrid>
+        </BitGridItem>
+
+        <BitGridItem ColumnSpan="12">
+            <BitGrid Columns="1" Class="px-4" HorizontalSpacing="2rem" VerticalSpacing="1rem">
+
+                <BitGridItem>
+                    <BitSeparator AlignContent="BitSeparatorAlignContent.Start">
+                        <BitText Typography="BitTypography.H6"><code>Authorized Users</code></BitText>
+                    </BitSeparator>
+                </BitGridItem>
+
+                <BitGridItem>
+                    <BitText Typography="BitTypography.Body2">
+                        You don't need to add your own user to the list,
+                        the API author is authorized by default.
+                    </BitText>
+                </BitGridItem>
+
+                <BitGridItem>
+                    <LdapSelect @bind-Users="_authorizedUsers" Label="" IncludeSamIds SearchBase="_ldapSearchBases" />
+                </BitGridItem>
+
+            </BitGrid>
+        </BitGridItem>
+
+        <BitGridItem ColumnSpan="12">
+            <BitButton FullWidth Styles="_btnStyles" OnClick="CreateApi">
+                Create API
+            </BitButton>
+        </BitGridItem>
+
+    </BitGrid>
+</AppModal>
+
+@code {
+    private ApiBsonDocument _api = new()
+    {
+        Slug = string.Empty,
+        StoredProcedure = new()
+        {
+            Database = new()
+            {
+                    Server = "172.20.65.42",
+                    Database = "DW"
+            },
+            Schema = "api",
+            StoredProcedure = string.Empty
+        }
+    };
+
+    private IEnumerable<LdapUserModel> _authorizedUsers = [];
+
+    private readonly string[] _ldapSearchBases = [
+        LdapBaseModel.ITUsers
+    ];
+
+    private async Task CreateApi()
+    {
+        if (string.IsNullOrWhiteSpace(_api.Slug))
+        {
+            _snack.Add("Slug cannot be empty", Severity.Warning);
+            return;
+        }
+
+        bool invalidSlug = await _apis.SlugIsTakenAsync(_api.Slug);
+        if (invalidSlug)
+        {
+            _snack.Add("Slug is already in use.", Severity.Warning);
+            return;
+        }
+
+        _api.Users = [.. from user in _authorizedUsers select user.Id.ToLower()];
+        await _apis.CreateAsync(_api);
+        _snack.Add($"API {_api.Slug} created.", Severity.Success);
+        IsOpen = false;
+        StateHasChanged();
+        _api = new()
+            {
+                Slug = string.Empty,
+                StoredProcedure = new()
+                {
+                    Database = new()
+                    {
+                        Server = "172.20.65.42",
+                        Database = "DW"
+                    },
+                    Schema = "api",
+                    StoredProcedure = string.Empty
+                }
+            };
+    }
+
+    [CascadingParameter]
+    public BitTheme Theme { get; set; } = default!;
+
+    [CascadingParameter]
+    public LdapUserModel? User { get; set; }
+
+    [Parameter]
+    public bool IsOpen { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    private readonly BitButtonClassStyles _btnStyles = new()
+        {
+            Primary = "margin-top: .5em; margin-bottom: .5em;",
+            LoadingContainer = "margin-top: .5em; margin-bottom: .5em;",
+            LoadingLabel = "margin-top: .5em; margin-bottom: .5em;"
+        };
+}

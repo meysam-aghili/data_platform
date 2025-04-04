@@ -1,0 +1,61 @@
+﻿@page "/apis"
+@using Bit.BlazorUI
+@using MudBlazor
+@using System.Diagnostics
+@using BlazorApp.Services
+@using BlazorApp.Models
+@using BlazorApp.Services.Sql
+@inject ISnackbar _snack
+@inject IApiRepository _apis
+
+@attribute [Authorize(Roles = $"{RoleNames.Admin}")]
+
+<PageTitle>APIs</PageTitle>
+
+<MudContainer Class="my-8 px-8" MaxWidth="MaxWidth.False">
+    <BitPivot @ref="_pivot">
+
+        <BitPivotItem HeaderText="APIs" Key="list">
+            <ApiListTab @bind-Selected="_api"
+                        OnCreateClick="() => _isNewPaneOpen = true"
+                        OnDeleteClick="() => _isConfirmDeleteOpen = true" />
+        </BitPivotItem>
+        @if (_api is not null)
+        {
+            <BitPivotItem HeaderText="@_api.Slug" Key="details">
+                <ApiDetailsTab Api="_api" />
+            </BitPivotItem>
+
+            <BitPivotItem HeaderText="Logs" Key="logs">
+                <ApiLogsTab Api="_api" />
+            </BitPivotItem>
+        }
+
+    </BitPivot>
+</MudContainer>
+
+<AppApiCreatorModal @bind-IsOpen="_isNewPaneOpen" />
+
+<AppConfirmDeleteModal @bind-IsOpen="_isConfirmDeleteOpen" ItemName="@_api?.Slug" OnConfirm="DeleteAsync" />
+
+@code {
+    private ApiBsonDocument? _api;
+    private BitPivot _pivot = default!;
+    private bool _isNewPaneOpen = false;
+    private bool _isConfirmDeleteOpen = false;
+
+    private async Task DeleteAsync()
+    {
+        try
+        {
+            await _apis.DeleteAsync(_api);
+            _isConfirmDeleteOpen = false;
+            _snack.Add($"Deleted {_api.Slug}");
+            StateHasChanged();
+        }
+        catch
+        {
+            _snack.Add($"Could not delete {_api.Slug}", Severity.Error);
+        }
+    }
+}

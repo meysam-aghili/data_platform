@@ -1,0 +1,106 @@
+﻿@using BlazorApp.Models
+@using BlazorApp.Services.Auth
+@using BlazorApp.Services.Mongo
+
+
+<style>
+    .selected {
+        background-color: @Theme?.Color.Primary.MainActive !important;
+    }
+
+    .selected > td {
+        color: white !important;
+    }
+
+    .selected > td .mud-input {
+        color: white !important;
+    }
+</style>
+
+<MudTable T="RoleModel"
+          @ref="_tbl"
+          Class="pa-4"
+          Elevation="1"
+          FixedHeader Hover
+          Breakpoint="Breakpoint.Sm"
+          ServerData="LoadPageAsync"
+          OnRowClick="async() => await SelectedRoleChanged.InvokeAsync(SelectedRole)"
+          @bind-SelectedItem="SelectedRole"
+          RowClass="cursor-pointer bi-table-row"
+          RowClassFunc="SelectedRowClass">
+
+    <ToolBarContent>
+        <MudTextField T="string"
+                      ValueChanged="Search"
+                      Placeholder="Search"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Class="mt-0"></MudTextField>
+
+        <BitSpacer />
+        <MudToolBar>
+            <BitButton OnClick="async() => await CreateNewClicked.InvokeAsync()">Create New</BitButton>
+        </MudToolBar>
+    </ToolBarContent>
+
+    <HeaderContent>
+        <MudTh>Slug</MudTh>
+        <MudTh>Created at</MudTh>
+        <MudTh>Last Update</MudTh>
+        <MudTh>Updated by</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Slug">@context.Slug</MudTd>
+        <MudTd DataLabel="Created at">@(context.CreatedAt is null ? "-" : context.CreatedAt.Value.ToString("yyyy-MM-dd"))</MudTd>
+        <MudTd DataLabel="Last Update">@(context.UpdatedAt is null ? "-" : context.UpdatedAt.Value.ToString("yyyy-MM-dd"))</MudTd>
+        <MudTd DataLabel="Updated by">@context.UpdatedBy</MudTd>
+    </RowTemplate>
+
+    <PagerContent>
+        <MudTablePager PageSizeOptions="_pageSizeOptions" />
+    </PagerContent>
+
+</MudTable>
+
+@code {
+    [Parameter]
+    public RoleModel? SelectedRole { get; set; }
+
+    [Parameter]
+    public EventCallback<RoleModel> SelectedRoleChanged { get; set; }
+
+    [Parameter]
+    public EventCallback CreateNewClicked { get; set; }
+
+    [Inject]
+    private IRoleRepository _repo { get; set; } = default!;
+
+    [CascadingParameter]
+    public BitTheme? Theme { get; set; }
+
+    private string _query = string.Empty;
+    private MudTable<RoleModel> _tbl { get; set; } = default!;
+    private readonly int[] _pageSizeOptions = [10, 25, 50];
+
+    public async Task<TableData<RoleModel>> LoadPageAsync(TableState state, CancellationToken cancellationToken)
+    {
+        (var items, int count) = await _repo.GetRolesAsync(_query, state.Page, state.PageSize);
+        return new TableData<RoleModel>
+            {
+                Items = items,
+                TotalItems = count
+            };
+    }
+
+    private void Search(string query)
+    {
+        _query = query;
+        _tbl.ReloadServerData();
+    }
+
+    private string SelectedRowClass(RoleModel role, int rowNumber) =>
+        SelectedRole is not null && SelectedRole.Id == role.Id
+        ? "selected"
+        : string.Empty;
+}

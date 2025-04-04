@@ -1,0 +1,1 @@
+curl -X POST -u elastic:elasticpassword "172.20.65.42:9200/_security/service/elastic/kibana/credential/token/token1?pretty"

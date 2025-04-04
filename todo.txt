@@ -29,6 +29,75 @@ tell artin
   about hostname jupyterhub and proxy
   idle remover
 fargh spark context va session
+
+-------web api QA
+swagger theme look like?
+why get only in public attr?
+why not one file in sql models?
+why basecontrolerr methods are protected
+can we use interface instead of abstract in basecontrolerr?
+chra token ro var gerefti va string nazashti variablesh ro? < too AuthController >
+in token controller why check weather user is null eather ApiController has specified
+ModelState.IsValid chera check mishe dar hali ke karbordi nadare?
+too AuthService chra public int ValidMinutes => _lifetimeMinutes; ro nvshti niaze? 
+too AuthService GetLoggedOnUserAsync too interface nist chra?
+too LdapService chra baazi variable ha too interface nist?
+chra 2 second delay dare?
+too LdapService GetUserAsync chara await Task.WhenAll(tasks); dare vaghti painesh dari foreach await mikoni
+too AuthService(IHttpContextAccessor _context, IConfiguration config) farghesh ba sakhtan constructor chie?
+too Repository Task.FromResult(itemsQuery.ToList()) chikar mikone? ToList nabayad baade task.res bashe?
+job Document too mongo vase chie be che dardi mikhore?
+too Service too GetUserRoleClaimsAsync niaz nist query apiAuthors zade beshe chon too query balaish hast
+too JobRepository GetFromDatabaseAsync too interface nist?
+chra too interface bayad async ro bardarim
+too SqlServerService chra options | Options ro gozashti?
+ExceptionHandler vase chie key exception mide?
+dalil singleton kardan ldapRepo va ... va Transient kardan ApiService va ...
+chra moghe tarif ye method ke input param az ye class dg dare interface oon ro estefade mikonn va class ro nmign. func(IServices a) 
+how to add logger to AddAuthenticationServices func
+options.IncludeXmlComments chikar mikone
+await _next(context) too middleware chie?
+evt.Properties.GetValueOrDefault("biapi")?.ToString() == true.ToString() in daghighan chra?
+too Service too var response = await _swarm.RunContainerAsync(job.ToContainer()); bejaye input func nabayad container ro bzarim
+ILdapRepository va IElasticService estefade nmishe too biapi vali too startup hast
+ask how to enable ssl
+chra too install certs ommadi az gosu kardi. nmishod too dockerfile update-certs as root zad va user ro avaz kard?
+signalR va grpc koja be dard ma mikhore to figikala
+-------blazor
+razor ro ba blazor mix kardi?
+too _Layoyt too base ref ~ chikar mikone?
+  _content path kojas
+  biapss css nist too project
+  blazor.server or blazor.web script file which one to use
+chra ProfileService ro AddScope zadi va chra interface nazashti barash
+chra baazi az service ha too biapss singletonan vali dar biapi transientan? meslse api service
+CascadingParameter chie chejuri param init mishe malsn too login page
+_Host.cshtml; chikar mikone
+runtimes chie?
+az rabbit che estefadei mikonid?
+
+see BiLog:DB_Rhodry.exporter.sinks
+
+nightangle
+slice-monitoring
+
+LogRequest
+HandleSuccess Failure
+AuthenticateAsync
+HandleUnauthorized
+MongoService GetAsync with ApiRepository and jobRepository
+too ApiRepository too GetAsync -> if (api is not null)
+SqlOptions Model optimization
+InMiddlewareError and LogHelper.LogRequest in BiApiMiddleware
+JwtBearerEvents on token invalid and expire
+page size
+write test
+rate limit
+GetAttributeOrNull
+
+create online shop site
+learn elk
+
 --------------------------------------
 connect to spark
 

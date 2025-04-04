@@ -1,0 +1,13 @@
+@import '../../wwwroot/css/bit-css-vars';
+
+.bi-selected {
+    background-color: $bit-color-action-active-primary !important;
+}
+
+.bi-selected > td {
+    color: $bit-color-neutrals-white !important;
+}
+
+.bi-selected > td .mud-input {
+    color: $bit-color-neutrals-white !important;
+}

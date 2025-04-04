@@ -1,0 +1,23 @@
+﻿@page "/logout"
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Mvc
+@using Microsoft.AspNetCore.Mvc.RazorPages
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>
+    Goodbye
+</PageTitle>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpContextAccessor.HttpContext is null)
+        {
+            Navigation.NavigateTo("/error");
+            return;
+        }
+        await HttpContextAccessor.HttpContext.SignOutAsync();
+        Navigation.NavigateTo("/");
+    }
+}

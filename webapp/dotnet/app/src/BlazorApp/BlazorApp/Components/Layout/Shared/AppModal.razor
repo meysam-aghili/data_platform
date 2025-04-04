@@ -1,0 +1,64 @@
+﻿@using BlazorApp.Models
+
+<style>
+    .selected {
+        background-color: @Theme?.Color.Primary.MainActive !important;
+    }
+
+    .selected > td {
+        color: white !important;
+    }
+
+    .selected > td .mud-input {
+        color: white !important;
+    }
+</style>
+
+<BitModal @bind-IsOpen="IsOpen" Styles="_modalStyles" OnDismiss="async () => await OnDismiss.InvokeAsync()">
+    @ChildContent
+</BitModal>
+
+@code {
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [CascadingParameter]
+    public BitTheme Theme { get; set; } = default!;
+
+    [CascadingParameter]
+    public LdapUserModel? User { get; set; }
+
+    [Parameter]
+    public bool IsOpen { get; set; } = false;
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnDismiss { get; set; }
+
+    [Parameter]
+    public string Height { get; set; } = "80vh";
+
+    [Parameter]
+    public string Width { get; set; } = "60%";
+
+    public void Close()
+    {
+        IsOpen = false;
+    }
+
+    private BitModalClassStyles _modalStyles => new BitModalClassStyles
+        {
+            Content = 
+            $@"
+                width: {Width};
+                height: {Height};
+                max-height: 600px;
+                padding: 2rem;
+                border-top: 3px solid {@Theme?.Color.Primary.MainActive} !important;
+                overflow: scroll;
+            ",
+        };
+}

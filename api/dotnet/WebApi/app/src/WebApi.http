@@ -1,0 +1,7 @@
+@WebApi_HostAddress = http://localhost:80
+
+### Get IDs
+GET {{WebApi_HostAddress}}/token2
+Accept: application/json
+
+##

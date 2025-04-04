@@ -1,0 +1,67 @@
+﻿@using BlazorApp.Models
+
+
+<MudAppBar Elevation="3">
+    @if (_loggedIn)
+    {
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Primary"
+                       Edge="Edge.Start"
+                       OnClick="@(async (e) => { SidebarIsOpen = !SidebarIsOpen; await SidebarIsOpenChanged.InvokeAsync(SidebarIsOpen); })" />
+    }
+    @if (!SidebarIsOpen)
+    {
+        <div class="ml-4">
+            <a href="/" style="text-decoration: none;">
+                <span class="@BitCss.Class.Color.Primary.Main" style="font-family: Contrail; font-size: x-large;">biapps</span>
+            </a>
+        </div>
+    }
+
+    <MudSpacer />
+
+    <BitActionButton Color="BitColor.Primary"
+                     IconName="@BitIconName.ColorSolid"
+                     OnClick="@(async(_) => await OnToggleDarkMode.InvokeAsync())" />
+    @if (_loggedIn)
+    {
+        <BitPersona PrimaryText="@User?.Name"
+                    SecondaryText="@User?.Title"
+                    Size="BitPersonaSize.Size40"
+                    ImageUrl="@PersonaImagePath"
+                    Styles="@(new()
+                        {
+                            PrimaryTextContainer = "font-weight: 500;",
+                            SecondaryTextContainer = "font-style: italic;"
+                        })"
+                    Unknown="string.IsNullOrEmpty(PersonaImagePath)" />
+        <BitButton Style="font-weight: 400;" Size="BitSize.Small" Variant="BitVariant.Outline" Href="/logout">Sign out</BitButton>
+    }
+    else
+    {
+        <BitActionButton Href="/login"
+                         IconName="@BitIconName.AddFriend"
+                         Style="min-height: auto;">Sign in</BitActionButton>
+    }
+</MudAppBar>
+
+@code {
+    [Parameter]
+    public LdapUserModel? User { get; set; }
+
+    [Parameter]
+    public bool SidebarIsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> SidebarIsOpenChanged { get; set; }
+
+    public string? PersonaImagePath => User is null ? string.Empty : $"api/users/{User.Id}/thumbnail";
+
+    [Parameter]
+    public EventCallback OnToggleDarkMode { get; set; }
+
+    @* [Parameter]
+    public List<BitMenuButtonItem> UserDropdownItems { get; set; } = []; *@
+
+    private bool _loggedIn => User is not null;
+}

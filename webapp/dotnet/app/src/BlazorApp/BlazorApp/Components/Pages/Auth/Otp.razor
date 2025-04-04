@@ -1,0 +1,69 @@
+﻿@page "/otp/{otpParam}"
+@using Microsoft.AspNetCore.Authentication;
+@using Microsoft.AspNetCore.Authentication.Cookies;
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Mvc;
+@using Microsoft.AspNetCore.Mvc.RazorPages;
+@inject IOtpRepository Otps
+@inject IAuthService Auth
+@inject IRoleRepository Roles
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+
+<PageTitle>Welcome</PageTitle>
+
+@code {
+    [Parameter]
+    public string? OtpParam { get; set; }
+
+    private async Task HandleOtpAsync(string otp)
+    {
+        var issuedOtp = await Otps.GetAsync(otp);
+        if (issuedOtp is null || !issuedOtp.IsValid)
+        {
+            Navigation.NavigateTo("/unauthorized");
+            return;
+        }
+
+        await Otps.UseAsync(issuedOtp);
+
+        var userRoles = await Roles.GetUserRolesAsync(issuedOtp.Username);
+        var principal = Auth.GenerateClaimsPrincipal(
+            authenticationScheme: CookieAuthenticationDefaults.AuthenticationScheme,
+            userId: issuedOtp.Username,
+            roles: from role in userRoles select role.Slug);
+
+        if (HttpContextAccessor.HttpContext is not null)
+        {
+
+            await HttpContextAccessor.HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal,
+            new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    IssuedUtc = DateTimeOffset.UtcNow,
+                    ExpiresUtc = DateTime.UtcNow.AddMinutes(Auth.ValidMinutes),
+                    RedirectUri = "/"
+                }
+            );
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            Navigation.NavigateTo("/error");
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(OtpParam))
+        {
+            await HandleOtpAsync(OtpParam);
+        }
+        else
+        {
+            Navigation.NavigateTo("/unauthorized");
+        }
+    }
+}

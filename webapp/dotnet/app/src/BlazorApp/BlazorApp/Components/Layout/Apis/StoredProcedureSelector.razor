@@ -1,0 +1,41 @@
+﻿<BitGrid Columns="2" HorizontalSpacing="2rem" VerticalSpacing="1rem">
+    <BitGridItem ColumnSpan="1">
+        <BitDropdown @bind-Value="Api.StoredProcedure.Database.Server"
+                    Label="Server"
+                    OnChange="async (string _) => await ResetDatabasesAsync()"
+                    Items="_serverOptions" />
+    </BitGridItem>
+
+    <BitGridItem ColumnSpan="1">
+        @if (_dbsLoading)
+        {
+            <BitProgress Indeterminate Style="height: 2rem;" />
+        }
+        else
+        {
+            <BitDropdown @bind-Value="Api.StoredProcedure.Database.Database"
+                        TItem="BitDropdownItem<string>" TValue="string"
+                        ShowSearchBox
+                        Styles="_styles"
+                        Items="_dbs"
+                        OnChange="async (string _) => await ResetStoredProceduresAsync()"
+                        Label="Database" />
+        }
+    </BitGridItem>
+
+    <BitGridItem ColumnSpan="2">
+        @if (_spsLoading)
+        {
+            <BitProgress Indeterminate Style="height: 2rem;" />
+        }
+        else
+        {
+            <BitDropdown @bind-Value="Api.StoredProcedure.StoredProcedure"
+                        TItem="BitDropdownItem<string>" TValue="string"
+                        ShowSearchBox
+                        Styles="_styles"
+                        Items="_sps"
+                        Label="Stored Procedure" />
+        }
+    </BitGridItem>
+</BitGrid>

@@ -1,0 +1,22 @@
+﻿<MudNavMenu Color="Color.Info" Bordered="true">
+    <MudNavLink Href="/apis" Icon="@Icons.Material.Filled.Api" Match="NavLinkMatch.Prefix">APIs</MudNavLink>
+    <MudNavGroup Title="Nightingale" Icon="@Icons.Material.Filled.NearMe">
+        <MudNavLink Href="/nightingale/email/bulk" Icon="@Icons.Material.Filled.LocalPostOffice" Match="NavLinkMatch.Prefix">Send Bulk Emails</MudNavLink>
+    </MudNavGroup>
+    <MudNavGroup Title="Apps" Icon="@Icons.Material.Filled.WebStories">
+        <MudNavLink Target="_blank" Href="/apps/product-ranking/">Product Ranking Tool</MudNavLink>
+        <MudNavLink Target="_blank" Href="/apps/adhoc-service/">Query Tool</MudNavLink>
+        <MudNavLink Target="_blank" Href="/apps/pricing/">Pricing</MudNavLink>
+        <MudNavLink Target="_blank" Href="/apps/mobile-pricing/">Mobile Pricing</MudNavLink>
+    </MudNavGroup>
+    <MudNavLink Href="/roles" Icon="@Icons.Material.Filled.Person">Roles</MudNavLink>
+    <MudNavLink Href="/slice-monitoring/projects" Icon="@Icons.Material.Filled.MonitorHeart">Slice Monitoring</MudNavLink>
+    <MudNavGroup Title="Docker Swarm" Icon="@Icons.Material.Filled.DirectionsBoat">
+        <MudNavLink Href="/swarm/secrets" Icon="@Icons.Material.Filled.Password">Secrets</MudNavLink>
+        <MudNavLink Href="/swarm/configs" Icon="@Icons.Material.Filled.Build">Configs</MudNavLink>
+    </MudNavGroup>
+    <MudNavGroup Title="Rhodry" Icon="@Icons.Material.Filled.Hub">
+        <MudNavLink Href="/rhodry/pipelines/change-tracking" Icon="@Icons.Material.Filled.LinearScale">Change-Tracking Pipelines</MudNavLink>
+    </MudNavGroup>
+    <MudNavLink Href="/streamlit-token" Icon="@Icons.Material.Filled.Key">Streamlit Token</MudNavLink>
+</MudNavMenu>

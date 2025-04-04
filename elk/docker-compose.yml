@@ -1,0 +1,84 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+services:
+  elasticsearch:
+    image: ${ELASTICSEARCH_IMAGE}
+    ports:
+      - ${ELASTICSEARCH_PORT}:9200
+    environment:
+      ES_JAVA_OPTS: "-Xmx1g -Xms1g"
+      ELASTIC_PASSWORD: elasticpassword
+      discovery.type: single-node
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    configs:
+      - source: elasticsearch-config
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+    <<: [*network, *deploy-on-front]
+    # logging:
+    #   driver: syslog
+    #   options:
+    #     syslog-address: udp://172.30.6.154
+    # log_driver: syslog
+    # log_opt:
+    #   syslog-tag: elasticsearch
+    #   syslog-address: udp://splunk:1514
+
+  kibana:
+    image: ${KIBANA_IMAGE}
+    ports:
+      - ${KIBANA_PORT}:5601
+    environment:
+      ELASTICSEARCH_SERVICEACCOUNTTOKEN: AAEAAWVsYXN0aWMva2liYW5hL3Rva2VuMTpfTTh6OUZYWFNrNjF5bG5hLWJ0bV9R
+    configs:
+      - source: kibana-config
+        target: /usr/share/kibana/config/kibana.yml
+    <<: [*network, *deploy-on-front]
+
+volumes:
+  elasticsearch-data:
+
+configs:
+  elasticsearch-config:
+    file: ./config/elasticsearch.yml
+  kibana-config:
+    file: ./config/kibana.yml

@@ -1,0 +1,33 @@
+﻿@using BlazorApp.Shared;
+
+
+<PageTitle>Not Found</PageTitle>
+
+<BitGrid Columns="1" HorizontalAlign="BitAlignment.Center" VerticalSpacing="1rem" Style="padding-top: 20vh;">
+    <BitGridItem>
+        <BitText Typography="BitTypography.H3" Align="BitTextAlign.Center" Style="_headerStyle">
+            <code style="font-family: VictorMono; font-weight: 600;">
+                Not Found
+            </code>
+        </BitText>
+    </BitGridItem>
+    <BitGridItem>
+        <BitText Typography="BitTypography.Subtitle1" Align="BitTextAlign.Center" Style="font-weight: 300;">
+            @_messages.RandomElement()
+        </BitText>
+    </BitGridItem>
+</BitGrid>
+
+@code {
+    [CascadingParameter]
+    public BitTheme Theme { get; set; }
+
+    string _headerStyle => $"color: {Theme.Color.Primary.MainActive};";
+
+    List<string> _messages = [
+        "Where'd you get that URL though?",
+        "You're just testing random URLs, aren't you?",
+        "I don't know what you're looking for, but it sure as shit ain't here.",
+        "Not all those who wander are lost... but where are you exactly?"
+    ];
+}

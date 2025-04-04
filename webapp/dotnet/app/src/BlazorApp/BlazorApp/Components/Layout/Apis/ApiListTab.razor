@@ -1,0 +1,70 @@
+﻿@using MudBlazor
+@using BlazorApp.Models
+@using BlazorApp.Services
+
+<style>
+    .selected {
+        background-color: @Theme?.Color.Primary.MainActive !important;
+    }
+
+    .selected > td {
+        color: white !important;
+    }
+
+    .selected > td .mud-input {
+        color: white !important;
+    }
+</style>
+
+<MudTable T="ApiBsonDocument"
+          @ref="_tbl"
+          @bind-SelectedItem="Selected"
+          Class="pa-4"
+          Elevation="1"
+          FixedHeader Hover
+          Breakpoint="Breakpoint.Sm"
+          ServerData="LoadPageAsync"
+          RowClass="cursor-pointer bi-table-row"
+          RowClassFunc="@SelectedRowClass"
+          OnRowClick="async() => await SelectedChanged.InvokeAsync(Selected)">
+    <ToolBarContent>
+        <MudTextField T="string"
+                      ValueChanged="Search"
+                      Placeholder="Search"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      IconSize="Size.Medium"
+                      Class="mt-0"></MudTextField>
+        <BitSpacer />
+        <MudToolBar>
+            <BitButton OnClick="CreateCallback"
+                       Style="width: 14em;"
+                       Styles="_btnStyles"
+                       IconName="@BitIconName.SettingsAdd">Create</BitButton>
+            <BitSpacer Width="8" />
+            <BitButton OnClick="DeleteCallback"
+                       Style="width: 7em;"
+                       Styles="_btnStyles"
+                       IsEnabled="Selected is not null"
+                       Variant="BitVariant.Text"
+                       IconName="@BitIconName.Delete">Delete</BitButton>
+        </MudToolBar>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Slug</MudTh>
+        <MudTh>Server</MudTh>
+        <MudTh>Database</MudTh>
+        <MudTh>Stored Procedure</MudTh>
+        <MudTh>Last Update</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Slug">@context.Slug</MudTd>
+        <MudTd DataLabel="Server">@context.StoredProcedure.Database.Server</MudTd>
+        <MudTd DataLabel="Database">@context.StoredProcedure.Database.Database</MudTd>
+        <MudTd DataLabel="Stored Procedure">@context.StoredProcedure.StoredProcedure</MudTd>
+        <MudTd DataLabel="Last Update">@(context.UpdatedAt ?? context.CreatedAt)</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="pageSizeOptions" />
+    </PagerContent>
+</MudTable>

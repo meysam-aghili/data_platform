@@ -1,0 +1,123 @@
+﻿@using Bit.BlazorUI
+@using Microsoft.AspNetCore.Http
+@using System.Security.Claims
+@using BlazorApp.Services.Auth
+@using BlazorApp.Services.Repositories
+@using BlazorApp.Shared
+@using BlazorApp.Services
+@using BlazorApp.Models
+@inherits LayoutComponentBase
+@inject BitThemeManager _bitThemeManager
+@inject ILdapRepository _ldap
+@inject IAuthService _auth
+@inject IRoleRepository _roles
+@inject ProfileService _profile
+
+
+<BitThemeProvider Theme="_bitActiveTheme">
+    <MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="IsDarkMode" Theme="AppMudTheme" />
+
+    <MudSnackbarProvider />
+    <MudDialogProvider />
+    <MudPopoverProvider />
+
+    <PageTitle>WebApp</PageTitle>
+
+    <MudLayout>
+        <AppTopbar User="User" @bind-SidebarIsOpen="_sidebarIsOpen" OnToggleDarkMode="ToggleDarkLight" />
+
+        @if (_loggedIn)
+        {
+            <AppSidebar Open="_sidebarIsOpen" />
+        }
+
+        <MudMainContent>
+            <CascadingValue Value="User">
+                <CascadingValue Value="IsAdmin">
+                    <CascadingValue Value="PageSizeOptions">
+                        @Body
+                    </CascadingValue>
+                </CascadingValue>
+            </CascadingValue>
+        </MudMainContent>
+
+    </MudLayout>
+</BitThemeProvider>
+
+@code {
+    [CascadingParameter]
+    public Task<AuthenticationState>? _authState { get; set; }
+
+    public LdapUserModel? User { get; set; }
+    public bool IsDarkMode { get; set; } = false;
+
+    bool _loggedIn => User is not null;
+    bool _sidebarIsOpen = true;
+    MudThemeProvider _mudThemeProvider;
+    BitTheme _bitActiveTheme => IsDarkMode ? AppBitDarkTheme : AppBitLightTheme;
+
+    public readonly int[] PageSizeOptions = [10, 25, 50];
+
+    // Deprecate this shit.
+    IReadOnlyList<RoleModel> _adminRoles = [];
+    public bool IsAdmin => (from role in _adminRoles where role.ContainsUser(User?.Id.ToLower() ?? string.Empty) select role).Any();
+
+    public async void ToggleDarkLight()
+    {
+        IsDarkMode = !IsDarkMode;
+        await _profile.ToggleDarkMode();
+        // await _bitThemeManager.ApplyBitThemeAsync(_bitActiveTheme);
+        await _bitThemeManager.ToggleDarkLightAsync();
+        StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var preferences = await _profile.GetPreferences();
+            if (preferences is null)
+            {
+                IsDarkMode = await _mudThemeProvider.GetSystemPreference();
+                Preferences newPreferences = new()
+                    {
+                        DarkMode = IsDarkMode
+                    };
+                await _profile.SetPreference(newPreferences);
+            }
+            else
+            {
+                IsDarkMode = preferences.DarkMode;
+            }
+            var bitTheme = await _bitThemeManager.GetCurrentThemeAsync();
+            if (bitTheme == "dark" && !IsDarkMode)
+            {
+                await _bitThemeManager.ToggleDarkLightAsync();
+            }
+            else if (bitTheme == "light" && IsDarkMode)
+            {
+                await _bitThemeManager.ToggleDarkLightAsync();
+            }
+            await _bitThemeManager.ApplyBitThemeAsync(_bitActiveTheme);
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ClaimsPrincipal? _user = null;
+        if (_authState is not null)
+        {
+            var authState = await _authState;
+            _user = authState?.User;
+        }
+        if (_user is not null)
+        {
+            if (_user.Identity?.Name is not null)
+            {
+                User = await _ldap.GetUserAsync(_user.Identity.Name);
+            }
+        }
+    }
+}
+

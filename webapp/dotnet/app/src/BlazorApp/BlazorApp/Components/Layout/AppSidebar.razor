@@ -1,0 +1,17 @@
+﻿<MudDrawer @bind-Open="Open" Elevation="0">
+    <MudDrawerHeader Class="mt-2 mb-2" 
+                     Style="display: flex; align-items: center; justify-content: center;">
+        <a href="/" style="text-decoration: none;">
+            <span class="@BitCss.Class.Color.Primary.Main"
+                  style="font-family: Contrail; font-size: xx-large;">
+                  biapps
+            </span>
+        </a>
+    </MudDrawerHeader>
+    <AppNavMenu />
+</MudDrawer>
+
+@code {
+    [Parameter]
+    public bool Open { get; set; }
+}

@@ -1,0 +1,113 @@
+﻿@using System.Diagnostics
+@using BlazorApp.Models
+@using BlazorApp.Services.Auth
+@using BlazorApp.Services
+@inject ILdapService Ldap
+
+<BitDropdown @bind-Values="Users"
+             TItem="BitDropdownItem<LdapUserModel>" TValue="LdapUserModel"
+             InitialSelectedItems="_initialUsers"
+             Virtualize MultiSelect Chips Combo
+             ShowSearchBox ShowClearButton
+             Label="@Label"
+             Placeholder="@Placeholder"
+             SearchBoxPlaceholder="@SearchBoxPlaceholder"
+             Styles="_styles"
+             ItemsProvider="SearchAsync"
+             OnValuesChange="async() => await UsersChanged.InvokeAsync(Users)" />
+
+@code {
+    [Parameter]
+    public IEnumerable<LdapUserModel> Users { get; set; } = [];
+
+    [Parameter]
+    public EventCallback<IEnumerable<LdapUserModel>> UsersChanged { get; set; }
+
+    private IEnumerable<BitDropdownItem<LdapUserModel>> _initialUsers =>
+        from user in Users
+        select new BitDropdownItem<LdapUserModel>
+            {
+                Value = user,
+                Text = GetItemText(user)
+            };
+
+    [Parameter]
+    public string Label { get; set; } = "Digikala Users";
+
+    [Parameter]
+    public string Placeholder { get; set; } = "Select Digikala users";
+
+    [Parameter]
+    public string SearchBoxPlaceholder { get; set; } = "Search Digikala users...";
+
+    [Parameter]
+    public bool IncludeTitles { get; set; } = false;
+
+    [Parameter]
+    public bool IncludeSamIds { get; set; } = false;
+
+    [Parameter]
+    public string[] SearchBase { get; set; } = [LdapBaseModel.ITUsers];
+
+    private BitDropdownClassStyles _styles = new()
+        {
+            PrefixContainer = "min-height: calc(var(--bit-spa-scaling-factor) * 5.75);",
+            Prefix = "font-weight: bold; font-family: VictorMono;",
+            ClearButton = "height: calc(var(--bit-spa-scaling-factor) * 5.75); right: calc(-1 * var(--bit-spa-scaling-factor) * 2);",
+            Chips = "border-radius: 3px; padding-left: 0.75rem;",
+            ChipsRemoveIcon = "padding-right: 0.2rem; padding-left: 0.5rem; font-size: smaller; right: 0;",
+            CaretDownIcon = "display: none; padding: calc(var(--bit-spa-scaling-factor) * 0);"
+        };
+
+    protected override void OnParametersSet()
+    {
+        Ldap.SearchBases = SearchBase;
+    }
+
+    private string GetItemText(LdapUserModel user)
+    {
+        if (IncludeTitles && IncludeSamIds)
+        {
+            throw new InvalidOperationException("Both IncludeTitles and IncludeSamIds cannot be true.");
+        }
+        if (IncludeTitles)
+        {
+            return $"{user.Name} | {user.Title}";
+        }
+        if (IncludeSamIds)
+        {
+            return $"{user.Name} ({user.Id})";
+        }
+        return user.Name ?? user.Id;
+    }
+
+    private bool IsValidQuery(string? queryTerm) =>
+        !(string.IsNullOrWhiteSpace(queryTerm) || queryTerm.Trim().Length < 3);
+
+    private async ValueTask<BitDropdownItemsProviderResult<BitDropdownItem<LdapUserModel>>> SearchAsync(
+        BitDropdownItemsProviderRequest<BitDropdownItem<LdapUserModel>> request)
+    {
+        try
+        {
+            if (!IsValidQuery(request.Search))
+            {
+                return BitDropdownItemsProviderResult.From(new List<BitDropdownItem<LdapUserModel>>(), 0);
+            }
+            
+            var people = await Ldap.QueryAsync(request.Search);
+            var items = 
+                from p in people
+                select new BitDropdownItem<LdapUserModel>
+                    {
+                        Text = GetItemText(p),
+                        Value = p
+                    };
+            var itemList = items.ToList().AsReadOnly();
+            return BitDropdownItemsProviderResult.From(itemList, itemList.Count);
+        }
+        catch
+        {
+            return BitDropdownItemsProviderResult.From(new List<BitDropdownItem<LdapUserModel>>(), 0);
+        }
+    }
+}

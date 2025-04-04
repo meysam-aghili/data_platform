@@ -39,5 +39,4 @@ for input_env_file in "${env_files[@]}"; do
     fi
 done
 
-# envsubst < docker-compose-kafka.yml > docker-compose-kafka.prod.yml
 envsubst < "$input_file" > "${input_file%.yml}.prod.yml"

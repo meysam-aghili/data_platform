@@ -1,0 +1,125 @@
+﻿@using BlazorApp.Models
+@using BlazorApp.Services.Auth
+@using BlazorApp.Services
+@inject ILdapService _ldap
+@inject IRoleRepository _roles
+@inject ISnackbar _snack
+
+<MudPaper Style="padding: 2rem;">
+    <BitGrid Columns="12" VerticalSpacing="1rem" HorizontalSpacing="1rem">
+
+        @if (Users is not null)
+        {
+            <BitGridItem ColumnSpan="8">
+                <LdapSelect @ref="_bildapSelect" @bind-Users="Users" IncludeTitles />
+            </BitGridItem>
+
+            <BitGridItem ColumnSpan="4">
+                <BitLabel>Details</BitLabel>
+                <MudPaper Outlined Class="px-4 py-4">
+
+                    <BitGrid Columns="2" VerticalSpacing="1rem">
+                        <BitGridItem ColumnSpan="2">
+                            <BitText Typography="BitTypography.H6"><code>@Role.Slug</code></BitText>
+                        </BitGridItem>
+                        <BitGridItem ColumnSpan="2">
+                            <BitText Style="font-size: 0.9em">
+                                Last updated at @((Role.UpdatedAt ?? Role.CreatedAt).Value.ToString("yyyy-MM-dd"))
+                                by @(Role.UpdatedBy ?? Role.CreatedBy)
+                            </BitText>
+                        </BitGridItem>
+
+                        <BitGridItem ColumnSpan="2">
+                            <BitButton Class="mt-4" Size="BitSize.Medium" OnClick="UpdateRoleAsync" FullWidth>Update Role</BitButton>
+                        </BitGridItem>
+                        <BitGridItem ColumnSpan="1">
+                            <BitButton Size="BitSize.Small"
+                                       Variant="BitVariant.Text"
+                                       OnClick="() => _isConfirmDiscardPaneOpen = true"
+                                       FullWidth
+                                       Style="font-weight: 400;">Discard Changes</BitButton>
+                        </BitGridItem>
+                        <BitGridItem ColumnSpan="1">
+                            <BitButton Size="BitSize.Small"
+                                       Variant="BitVariant.Text"
+                                       OnClick="() => _isConfirmDeletePaneOpen = true"
+                                       FullWidth
+                                       Style="font-weight: 400;">Delete</BitButton>
+                        </BitGridItem>
+                    </BitGrid>
+                </MudPaper>
+            </BitGridItem>
+        }
+    </BitGrid>
+</MudPaper>
+
+<AppModal Height="180px" Width="40%" @bind-IsOpen="_isConfirmDiscardPaneOpen" OnDismiss="() => _isConfirmDiscardPaneOpen = false">
+    <BitGrid Columns="2" VerticalSpacing="2rem" HorizontalSpacing="2rem">
+
+        <BitGridItem ColumnSpan="2">
+            <BitText Typography="BitTypography.H6" Class="modal-header">Discard Changes?</BitText>
+        </BitGridItem>
+
+        <BitGridItem ColumnSpan="1">
+            <BitButton OnClick="async() => await CloseTabRequested.InvokeAsync()" FullWidth>
+                Discard
+            </BitButton>
+        </BitGridItem>
+        <BitGridItem ColumnSpan="1">
+            <BitButton Variant="BitVariant.Outline" OnClick="() => _isConfirmDiscardPaneOpen = false" FullWidth>
+                Cancel
+            </BitButton>
+        </BitGridItem>
+
+    </BitGrid>
+</AppModal>
+
+<AppConfirmDeleteModal @bind-IsOpen="_isConfirmDeletePaneOpen" ItemName="@Role.Slug" OnConfirm="DeleteRoleAsync" />
+
+@code {
+    [Parameter]
+    public RoleModel Role { get; set; }
+
+    [Parameter]
+    public EventCallback CloseTabRequested { get; set; }
+
+    [CascadingParameter]
+    public BitTheme Theme { get; set; }
+
+    private bool _isConfirmDiscardPaneOpen = false;
+
+    private bool _isConfirmDeletePaneOpen = false;
+
+    private LdapSelect _bildapSelect = default!;
+
+    public IEnumerable<LdapUserModel>? Users { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _ldap.SearchBases = [
+           LdapBaseModel.ITUsers
+        ];
+        Users = [.. await _ldap.GetUsersAsync(Role.Users)];
+    }
+
+    private async Task UpdateRoleAsync()
+    {
+        try
+        {
+            Role.Users = (from user in Users select user.Id).Distinct().ToList();
+            await _roles.UpdateRoleAsync(Role);
+            _snack.Add($"Successfully updated {Role.Slug}", Severity.Success);
+        }
+        catch
+        {
+            _snack.Add("Something went wrong", Severity.Error);
+        }
+    }
+
+    private async Task DeleteRoleAsync()
+    {
+        await _roles.DeleteRoleAsync(Role);
+        _snack.Add($"Deleted {Role.Slug}.", Severity.Success);
+        await CloseTabRequested.InvokeAsync();
+    }
+}

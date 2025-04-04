@@ -1,0 +1,124 @@
+﻿@page "/login"
+@using BlazorApp.Models
+@using BlazorApp.Services.Auth
+@using BlazorApp.Services.Repositories
+@inject NavigationManager Navigation
+@inject ILoggerFactory LoggerFactory
+@inject ILdapService Ldap
+@inject IOtpRepository Auth
+@inject ISnackbar Snack
+
+<style>
+    .biapps {
+    font-family: Contrail;
+    font-size: 3rem;
+    color: @Theme?.Color.Primary.MainActive !important;
+    }
+
+    #left-pane {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    }
+</style>
+
+<PageTitle>
+    Login
+</PageTitle>
+
+<MudGrid Spacing="0" Justify="Justify.Center" Style="height: 100%;">
+    <MudItem md="8" Style="margin-top: 20vh;">
+        <MudPaper Class="pa-10" Elevation="2" Outlined>
+            <MudGrid>
+                <MudItem xs="5">
+                    <div id="left-pane">
+                        <div>
+                            <h2 class="biapps">
+                                Data Platform
+                            </h2>
+                            <br />
+                            <p>
+                                Web App
+                            </p>
+                        </div>
+                    </div>
+                </MudItem>
+                <MudItem xs="7">
+
+                    <p>
+                        Login using your active directory credentials, with or without @@domain.com<br />
+                    </p>
+
+                    <div style="height: 1rem;"></div>
+
+                    <BitTextField @bind-Value="LoginDto.Username" Label="Username" Underlined />
+                    <BitTextField @bind-Value="LoginDto.Password" Label="Password" Type="BitInputType.Password" Underlined />
+
+                    <BitButton FullWidth
+                    OnClick="SignInAsync"
+                    Style="margin-top: 3rem;"
+                    IsLoading="_isLoading"
+                    Size="BitSize.Medium"
+                    Styles="_btnStyles">Login</BitButton>
+
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+
+    [CascadingParameter]
+    public BitTheme Theme { get; set; } = default!;
+
+    [CascadingParameter]
+    public LdapUserModel? User { get; set; }
+
+    public UserLoginModel LoginDto { get; set; } = new();
+
+    private bool _isLoading = false;
+
+    private BitButtonClassStyles _btnStyles = new()
+    {
+        Primary = "margin-top: .5em; margin-bottom: .5em;",
+        LoadingContainer = "margin-top: .5em; margin-bottom: .5em;",
+        LoadingLabel = "margin-top: .5em; margin-bottom: .5em;"
+    };
+
+    protected override void OnParametersSet()
+    {
+        if (User is not null && !string.IsNullOrEmpty(User.Id))
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    public async Task SignInAsync()
+    {
+        _isLoading = true;
+        string samId = LoginDto?.Username?.ToLower() ?? string.Empty;
+        samId = samId.EndsWith("@digikala.com") ? samId.Replace("@digikala.com", string.Empty) : samId;
+        if (string.IsNullOrWhiteSpace(samId) || string.IsNullOrWhiteSpace(LoginDto?.Password))
+        {
+            _isLoading = false;
+            Snack.Add("Invalid credentials", Severity.Error);
+        }
+        else
+        {
+            bool authenticated = await Ldap.AuthenticateAsync(new ( samId, LoginDto.Password ));
+            if (authenticated)
+            {
+                var otp = await Auth.IssueAsync(samId);
+                Navigation.NavigateTo($"/otp/{otp}", true);
+            }
+            if (!authenticated)
+            {
+                _isLoading = false;
+                Snack.Add("Invalid credentials", Severity.Error);
+            }
+        }
+    }
+}

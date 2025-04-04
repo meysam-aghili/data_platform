@@ -1,0 +1,79 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+services:
+  ldap:
+    image: ${LDAP_IMAGE}
+    ports:
+      - ${LDAP_PORT}:636
+      - 389:389
+    environment:
+      LDAP_ADMIN_PASSWORD: adminpassword
+      LDAP_CONFIG_PASSWORD: config_pass
+      LDAP_BASE_DN: "dc=dataplatform,dc=com"
+      LDAP_ORGANISATION: "dataplatform"
+      LDAP_DOMAIN: "dataplatform.com"
+      LDAP_TLS: "true"
+      LDAP_LOG_LEVEL: "256"
+      LDAP_REMOVE_CONFIG_AFTER_SETUP: "false"
+      LDAP_REPLICATION: "false"
+      LDAP_TLS_CRT_FILENAME: domain.crt
+      LDAP_TLS_KEY_FILENAME: domain.key
+      LDAP_TLS_CA_CRT_FILENAME: domain.crt
+      LDAP_TLS_VERIFY_CLIENT: try
+    volumes:
+      # - ldap-data:/var/lib/ldap
+      - ./config/bootstrap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/50-bootstrap.ldif
+      - ./config/certs:/container/service/slapd/assets/certs
+    command: --copy-service
+    <<: [*network, *deploy-on-front]
+
+  ldap-admin:
+    image: ${LDAP_ADMIN_IMAGE}
+    ports:
+      - ${LDAP_ADMIN_PORT}:80
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: ldap
+      PHPLDAPADMIN_HTTPS: "false"
+    <<: [*network, *deploy-on-front]
+
+# volumes:
+#   ldap-data:

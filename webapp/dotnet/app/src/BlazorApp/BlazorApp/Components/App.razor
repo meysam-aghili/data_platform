@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html use-system-theme lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+
+    <!-- MudBlazor -->
+    <link rel="stylesheet" href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" />
+    <!-- Bit -->
+    <link rel="stylesheet" href="@Assets["_content/Bit.BlazorUI/styles/bit.blazorui.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/Bit.BlazorUI.Extras/styles/bit.blazorui.extras.css"]" />
+    <link rel="stylesheet" href="@Assets["_content/Bit.BlazorUI.Icons/styles/bit.blazorui.icons.css"]" />
+    <!-- Blazored Editor -->
+    <link rel="stylesheet" href="@Assets["css/quill.1.3.6.snow.css"]" />
+    <link rel="stylesheet" href="@Assets["css/quill.1.3.6.bubble.css"]" />
+    <!-- app -->
+    <link rel="stylesheet" href="@Assets["css/bit-css-vars.css"]" />
+    <link rel="stylesheet" href="@Assets["css/main.css"]" />
+    <link rel="stylesheet" href="@Assets["css/app.css"]" />
+
+    <ImportMap />
+    <link rel="icon" type="image/png" href="@Assets["favicon.png"]" />
+    <HeadOutlet @rendermode="InteractiveServer" />
+</head>
+<body>
+    <Routes @rendermode="InteractiveServer" />
+
+    <div id="blazor-error-ui">
+        <environment include="Staging,Production">
+            An error has occurred. This application may no longer respond until reloaded.
+        </environment>
+        <environment include="Development">
+            An unhandled exception has occurred. See browser dev tools for details.
+        </environment>
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    
+    <!-- Blazor -->
+    <script src="_framework/blazor.web.js"></script>
+    <script src="_framework/blazor.server.js"></script>
+    <!-- Bit -->
+    <script src="_content/Bit.BlazorUI/scripts/bit.blazorui.js"></script>
+    <script src="_content/Bit.BlazorUI.Extras/scripts/bit.blazorui.extras.js"></script>
+    <!-- MudBlazor -->
+    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+    <!-- Blazored Editor -->
+    <script src="js/quill.1.3.6.js"></script>
+    <script src="_content/Blazored.TextEditor/quill-blot-formatter.min.js"></script>
+    <script src="_content/Blazored.TextEditor/Blazored-BlazorQuill.js"></script>
+</body>
+</html>

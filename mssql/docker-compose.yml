@@ -1,0 +1,55 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+services:
+  mssql:
+    image: ${MSSQL_IMAGE}
+    ports:
+      - ${MSSQL_PORT}:1433
+    environment:
+      ACCEPT_EULA: 'Y'
+      MSSQL_SA_PASSWORD: Sh!@#12345
+    volumes:
+      - mssql-data:/var/opt/mssql
+    <<: [*network, *deploy-on-front]
+  
+volumes:
+  mssql-data:

@@ -92,3 +92,6 @@ deploy-api-dotnet:
 	docker stack rm platform-WebApi
 	docker build -t localregistry.com/dotnet/webapi:1.0.0 ./api/dotnet/WebApi/
 	./deploy-stack.sh WebApi ./api/dotnet
+
+deploy-rabbitmq:
+	./deploy-stack.sh rabbitmq

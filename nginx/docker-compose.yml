@@ -70,7 +70,7 @@ services:
            chmod 644 /etc/nginx/certs/git.crt &&
            nginx -g 'daemon off;'"
     extra_hosts:
-      - "forgejo:192.168.100.80"
+      - "forgejoa:192.168.100.80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       <<: *healthcheck-config
@@ -88,4 +88,4 @@ secrets:
 configs:
   nginx-config:
     file: ./configs/nginx.conf
-    name: nginx-config_2026-02-06-v9
+    name: nginx-config_2026-02-06-v10

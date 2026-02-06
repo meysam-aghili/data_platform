@@ -42,8 +42,9 @@ x-network: &network
 services:
   nginx:
     image: nginx:1.29.2-alpine3.22
-    <<: [*deploy-on-front, *network]
-    # network_mode: host
+    # <<: [*deploy-on-front, *network]
+    <<: *deploy-on-front
+    network_mode: host
     ports:
       - 80:80
       - 443:443
@@ -68,8 +69,6 @@ services:
            chmod 600 /etc/nginx/certs/git.key &&
            chmod 644 /etc/nginx/certs/git.crt &&
            nginx -g 'daemon off;'"
-    # extra_hosts:
-    #   - "forgejo:127.0.0.1"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost/health"]
       <<: *healthcheck-config
@@ -87,4 +86,4 @@ secrets:
 configs:
   nginx-config:
     file: ./configs/nginx.conf
-    name: nginx-config_2026-02-06-v6
+    name: nginx-config_2026-02-06-v7

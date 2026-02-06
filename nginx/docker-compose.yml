@@ -31,11 +31,19 @@ x-deploy-on-host-03: &deploy-on-host-03
         
 ##################################################################
 
+networks:
+  data_platform:
+    external: true
+
+x-network: &network
+  networks:
+    - data_platform
+
 services:
   nginx:
     image: nginx:1.29.2-alpine3.22
-    <<: *deploy-on-front
-    network_mode: host
+    <<: [*deploy-on-front, *network]
+    # network_mode: host
     ports:
       - 80:80
       - 443:443
@@ -79,4 +87,4 @@ secrets:
 configs:
   nginx-config:
     file: ./configs/nginx.conf
-    name: nginx-config_2026-02-06-v5
+    name: nginx-config_2026-02-06-v6

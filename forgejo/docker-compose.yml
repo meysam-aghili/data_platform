@@ -48,7 +48,7 @@ services:
       - FORGEJO__server__DOMAIN=git.meysamaghili.ir
       - FORGEJO__service__SSH_DOMAIN=git.meysamaghili.ir
       - FORGEJO__service__SSH_PORT=222
-      - FORGEJO__server__ROOT_URL=http://git.meysamaghili.ir:3000/
+      - FORGEJO__server__ROOT_URL=https://git.meysamaghili.ir/
       - FORGEJO__database__DB_TYPE=sqlite3
       - FORGEJO__database__PATH=/data/gitea/forgejo.db
       - FORGEJO__security__INSTALL_LOCK=true

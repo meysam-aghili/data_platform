@@ -1,7 +1,5 @@
 [ ] Forgejo
-    rename resume to data platform
     add ssh
-    add tls
     add registry
 [ ] client
     [ ] shipping address form

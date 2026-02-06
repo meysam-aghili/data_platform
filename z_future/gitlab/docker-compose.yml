@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:18.4.3-ce.0
+    container_name: gitlab
+    hostname: gitlab.example.com
+    restart: always
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://gitlab.example.com'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2424
+        gitlab_rails['time_zone'] = 'UTC'
+        gitlab_rails['smtp_enable'] = false
+
+        # SSL configuration
+        nginx['redirect_http_to_https'] = true
+        nginx['ssl_certificate'] = "/etc/gitlab/ssl/gitlab.example.com.crt"
+        nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/gitlab.example.com.key"
+
+        # Registry (HTTPS)
+        registry_external_url 'https://registry.example.com'
+        gitlab_rails['registry_enabled'] = true
+        gitlab_rails['registry_host'] = "registry.example.com"
+        gitlab_rails['registry_api_url'] = "https://registry.example.com"
+        gitlab_rails['registry_issuer'] = "gitlab-issuer"
+        gitlab_rails['registry_key_path'] = "/var/opt/gitlab/gitlab-rails/etc/gitlab-registry.key"
+
+        # Tell GitLab where the certs are
+        registry_nginx['ssl_certificate'] = "/etc/gitlab/ssl/registry.example.com.crt"
+        registry_nginx['ssl_certificate_key'] = "/etc/gitlab/ssl/registry.example.com.key"
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "2424:22"
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+      - ./configs/certs:/etc/gitlab/ssl:ro
+
+  registry:
+    image: registry:3.0.0
+    container_name: registry
+    hostname: registry
+    restart: always
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /var/lib/registry
+      REGISTRY_HTTP_ADDR: 0.0.0.0:443
+
+      # HTTPS
+      REGISTRY_HTTP_TLS_CERTIFICATE: /run/secrets/registry_ssl_crt
+      REGISTRY_HTTP_TLS_KEY: /run/secrets/registry_ssl_key
+
+      # Token-based auth from GitLab
+      REGISTRY_AUTH_TOKEN_REALM: https://meysamaghili.com/jwt/auth
+      REGISTRY_AUTH_TOKEN_SERVICE: container_registry
+      REGISTRY_AUTH_TOKEN_ISSUER: gitlab-issuer
+      REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: /certs/gitlab-registry.crt
+    volumes:
+      # - registry_data:/var/lib/registry
+      - ./configs/certs:/certs:ro
+      - gitlab_data:/var/opt/gitlab/gitlab-rails/etc:ro
+    secrets:
+      - registry_ssl_crt
+      - registry_ssl_key
+
+volumes:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
+  registry_data:

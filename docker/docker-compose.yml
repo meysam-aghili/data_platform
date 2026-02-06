@@ -1,0 +1,65 @@
+version: "3.9"
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+networks:
+  resume:
+    external: true
+
+x-network: &network
+  networks:
+    - resume
+
+services:
+  portainer:
+    image: portainer/portainer-ce:2.26.1-alpine
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    ports:
+      - 9000:9000
+    <<: [*network, *deploy-on-host-02]
+
+  registry:
+    image: registry:3.0.0
+    hostname: registry
+    ports:
+      - 5000:5000
+    volumes:
+      - registry_data:/var/lib/registry
+    environment:
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+    <<: [*network, *deploy-on-front]
+
+volumes:
+  portainer_data:
+  registry_data:

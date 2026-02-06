@@ -1,0 +1,79 @@
+version: "3.9"
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+networks:
+  resume:
+    external: true
+
+x-network: &network
+  networks:
+    - resume
+
+services:
+  nginx:
+    image: nginx:1.29.2-alpine3.22
+    <<: [*network, *deploy-on-host-02]
+    ports:
+      - 80:80
+      - 443:443
+    environment:
+      TZ: Asia/Tehran
+    volumes:
+      - /mnt/nfs/nginx:/var/log/nginx
+    configs:
+      - source: nginx-config
+        target: /etc/nginx/conf.d/default.conf
+    secrets:
+      - RESUME_SSL_CERT
+      - RESUME_SSL_KEY
+    command: >
+      sh -c "mkdir -p /etc/nginx/certs &&
+           cp /run/secrets/RESUME_SSL_CERT /etc/nginx/certs/resume.crt &&
+           cp /run/secrets/RESUME_SSL_KEY /etc/nginx/certs/resume.key &&
+           chmod 600 /etc/nginx/certs/resume.key &&
+           chmod 644 /etc/nginx/certs/resume.crt &&
+           nginx -g 'daemon off;'"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      <<: *healthcheck-config
+ 
+secrets:
+  RESUME_SSL_CERT:
+    external: true
+  RESUME_SSL_KEY:
+    external: true
+
+configs:
+  nginx-config:
+    file: ./configs/nginx.conf
+    name: nginx-config_2025-11-14-v10

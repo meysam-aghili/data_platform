@@ -1,0 +1,190 @@
+version: "3.9"
+
+networks:
+  resume:
+    external: true
+
+x-network: &network
+  networks:
+    - resume
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+x-airflow-common: &airflow-common
+  image: ${LOCAL_REGISTRY}/airflow:${VERSION}
+  environment:
+    &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN_SECRET: AIRFLOW_DB_CONN_URI
+    AIRFLOW__CELERY__RESULT_BACKEND_SECRET: AIRFLOW_DB_BACKEND_CONN_URI
+    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    AIRFLOW__CELERY__WORKER_CONCURRENCY: 15 # The maximum number of tasks per Celery worker
+    AIRFLOW__CORE__FERNET_KEY: mI2KHmFNa-wjC2cb2oEWHGB8dS2_O9RK08KWyDwP1UQ= # for encrypt and decrypt secrets such as connections,variables, and user password
+    AIRFLOW__CORE__DEFAULT_TIMEZONE: Asia/Tehran
+    AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE: Asia/Tehran
+    AIRFLOW__WEBSERVER__BASE_URL: http://localhost/projects/airflow
+    AIRFLOW__METRICS__STATSD_ON: "true"
+    AIRFLOW__METRICS__STATSD_HOST: "statsd-exporter"
+    AIRFLOW__METRICS__STATSD_PORT: "9125"
+    AIRFLOW__METRICS__STATSD_PREFIX: "airflow"
+    AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'false'
+    AIRFLOW__WEBSERVER__EXPOSE_CONFIG: 'true'
+    AIRFLOW__LOGGING__COLORED_CONSOLE_LOG: 'true'
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_postgres/airflow
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_postgres/airflow
+    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow_postgres/airflow
+  volumes:
+    - /mnt/hgfs/github/gitlab/resume/airflow/dags:/opt/airflow/dags
+    - /var/run/docker.sock:/var/run/docker.sock
+  secrets:
+    - AIRFLOW_DB_CONN_URI
+    - AIRFLOW_DB_BACKEND_CONN_URI
+  <<: *network
+
+services:
+  postgres:
+    image: postgres:14.15
+    <<: [*network, *deploy-on-front]
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD_FILE: /var/run/secrets/AIRFLOW_POSTGRES_PASSWORD
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow_postgres_data:/var/lib/postgresql/data
+    user: postgres
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      <<: *healthcheck-config
+    secrets:
+      - AIRFLOW_POSTGRES_PASSWORD
+    
+  redis:
+    image: redis:7.2-bookworm
+    <<: [*network, *deploy-on-front]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      <<: *healthcheck-config
+
+  airflow-webserver:
+    <<: [*airflow-common, *deploy-on-front]
+    command: webserver
+    ports:
+      - 1000:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/projects/airflow/health"]
+      <<: *healthcheck-config
+
+  airflow-scheduler:
+    <<: [*airflow-common, *deploy-on-front]
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      <<: *healthcheck-config
+
+  airflow-worker:
+    <<: [*airflow-common, *deploy-on-front]
+    command: celery worker
+    # deploy:
+    #   mode : 'global'
+    healthcheck:
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      <<: *healthcheck-config
+    environment:
+      <<: *airflow-common-env
+      DUMB_INIT_SETSID: "0"
+
+  airflow-cli:
+    <<: [*airflow-common, *deploy-on-front]
+    entrypoint: ["tail", "-f", "/dev/null"]
+    command: /bin/bash
+
+  airflow-init:
+    <<: [*airflow-common, *deploy-on-front]
+    entrypoint: /bin/bash
+    deploy:
+      mode: replicated-job
+      replicas: 1
+    command:
+      - -c
+      - |
+        mkdir -p /sources/logs /sources/dags /sources/plugins
+        chown -R "$${50000}:0" /sources/{logs,dags,plugins}
+        exec /entrypoint airflow version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${AIRFLOW_WWW_USER_PASSWORD:-airflow}
+      _PIP_ADDITIONAL_REQUIREMENTS: ''
+    user: "0:0"
+
+  flower:
+    <<: [*airflow-common, *deploy-on-front]
+    command: celery flower
+    # ports:
+    #   - ${FLOWER_PORT}:5555
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
+      <<: *healthcheck-config
+
+  statsd-exporter:
+    image: prom/statsd-exporter:v0.28.0
+    configs:
+      - source: airflow-statsd-config
+        target: /home/statsd-mapping-configs.yaml
+    entrypoint: ["/bin/sh", "-c", "--"]
+    command: ["statsd_exporter --statsd.listen-udp=:9125 --web.listen-address=:9102 --log.level debug --statsd.mapping-config=/home/statsd-mapping-configs.yaml"]
+    # ports:
+    #   - 10017:9102
+    <<: [*network, *deploy-on-front]
+
+volumes:
+  airflow_postgres_data:
+
+configs:
+  airflow-statsd-config:
+    file: configs/statsd.yaml
+    name: airflow-statsd-config_2025-11-10-v1
+
+secrets:
+  AIRFLOW_POSTGRES_PASSWORD:
+    external: true
+  AIRFLOW_DB_CONN_URI:
+    external: true
+  AIRFLOW_DB_BACKEND_CONN_URI:
+    external: true

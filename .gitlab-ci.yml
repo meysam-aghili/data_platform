@@ -1,0 +1,139 @@
+stages:
+  - pre_deploy
+  - build
+  - deploy
+
+before_script:
+  - source .env
+  # - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+
+# ########################### Frontend
+# build webapp frontend:
+#   stage: build
+#   only:
+#     - main
+#   script:
+#     - cd webapp/resume
+#     - source .env
+#     - docker build -t "${LOCAL_REGISTRY}/frontend:${FRONTEND_VERSION}" -f src/frontend/Dockerfile ./src/frontend
+#     - docker push "${LOCAL_REGISTRY}/frontend:${FRONTEND_VERSION}"
+
+# deploy webapp:
+#   stage: deploy
+#   only:
+#     - main
+#   script:
+#     - ./parse_compose_envs.sh webapp/resume/docker-compose.yml .env webapp/resume/.env
+#     - docker stack deploy -c webapp/resume/docker-compose.prod.yml --with-registry-auth webapp
+
+# ########################### Proxy
+# deploy proxy:
+#   stage: pre_deploy
+#   only:
+#     - main
+#   script:
+#     - ./parse_compose_envs.sh proxy/docker-compose.yml .env
+#     - docker stack deploy -c proxy/docker-compose.prod.yml --with-registry-auth proxy
+
+# ########################### Docker
+# deploy docker:
+#   stage: pre_deploy
+#   only:
+#     - main
+#   script:
+#     - ./parse_compose_envs.sh docker/docker-compose.yml .env
+#     - docker stack deploy -c docker/docker-compose.prod.yml --with-registry-auth docker
+
+# ########################### Airflow
+# build airflow:
+#   stage: build
+#   only:
+#     - main
+#   script:
+#     - cd airflow
+#     - source .env
+#     - docker build -t "${LOCAL_REGISTRY}/airflow:${VERSION}" -f Dockerfile .
+#     - docker push "${LOCAL_REGISTRY}/airflow:${VERSION}"
+
+# deploy airflow:
+#   stage: deploy
+#   only:
+#     - main
+#   script:
+#     - ./parse_compose_envs.sh airflow/docker-compose.yml .env airflow/.env
+#     - docker stack deploy -c airflow/docker-compose.prod.yml --with-registry-auth airflow
+
+# ########################### Postgres
+deploy postgres:
+  stage: deploy
+  only:
+    - main
+  script:
+    - ./parse_compose_envs.sh postgres/docker-compose.yml .env
+    - docker stack deploy -c postgres/docker-compose.prod.yml --with-registry-auth postgres
+
+########################### ELK
+# deploy elk:
+#   stage: deploy
+#   only:
+#     - main
+#   script:
+#     - ./parse_compose_envs.sh elk/docker-compose.yml .env
+#     - docker stack deploy -c elk/docker-compose.prod.yml --with-registry-auth elk
+
+########################### Prometheus/Grafana
+# deploy prom:
+#   stage: deploy
+#   only:
+#     - main
+#   script:
+#     - ./parse_compose_envs.sh prometheus-grafana/docker-compose.yml .env
+#     - docker stack deploy -c prometheus-grafana/docker-compose.prod.yml --with-registry-auth prom
+
+########################### Xray
+# deploy xray:
+#   stage: deploy
+#   only:
+#     - main
+#   script:
+#     - ./parse_compose_envs.sh xray/docker-compose.yml .env
+#     - docker stack deploy -c xray/docker-compose.prod.yml --with-registry-auth xray
+
+
+########################### online-shop
+# build online-shop admin:
+#   stage: build
+#   only:
+#     - main
+#   script:
+#     - cd webapp/online-shop
+#     - source .env
+#     - cd admin
+#     - docker build -t "${LOCAL_REGISTRY}/online_shop_admin:${ADMIN_VERSION}" -f Dockerfile .
+#     - docker push "${LOCAL_REGISTRY}/online_shop_admin:${ADMIN_VERSION}"
+
+# deploy online-shop:
+#   stage: deploy
+#   only:
+#     - main
+#   script:
+#     - ./parse_compose_envs.sh webapp/online-shop/docker-compose.yml .env webapp/online-shop/.env
+#     - docker stack deploy -c webapp/online-shop/docker-compose.prod.yml --with-registry-auth online_shop
+
+########################### Minio
+# deploy minio:
+#   stage: deploy
+#   only:
+#     - main
+#   script:
+#     - ./parse_compose_envs.sh minio/docker-compose.yml .env
+#     - docker stack deploy -c minio/docker-compose.prod.yml --with-registry-auth minio
+
+########################### Clickhouse
+# deploy clickhouse:
+#   stage: deploy
+#   only:
+#     - main
+#   script:
+#     - ./parse_compose_envs.sh clickhouse/docker-compose.yml .env
+#     - docker stack deploy -c clickhouse/docker-compose.prod.yml --with-registry-auth clickhouse

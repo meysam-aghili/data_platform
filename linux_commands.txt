@@ -1,0 +1,40 @@
+sudo certbot certonly --manual --preferred-challenges dns -d git.meysamaghili.ir
+
+set fedora mirror repository:
+sudo sed -i '/^metalink=/s/^/#/' /etc/yum.repos.d/*.repo
+sudo sed -i '/^#metalink=/i baseurl=https://mirror.mobinhost.com/fedora/linux/releases/\$releasever/Everything/\$basearch/os/' /etc/yum.repos.d/*.repo
+
+setup ssh-server
+sudo dnf install openssh-server
+sudo systemctl start sshd
+sudo systemctl enable sshd
+sudo firewall-cmd --add-service=ssh --permanent
+
+firewall:
+sudo systemctl start firewalld
+sudo systemctl enable firewalld
+sudo firewall-cmd --list-all
+sudo firewall-cmd --add-service=ssh --permanent
+sudo firewall-cmd --remove-port=1025-65535/tcp --permanent
+sudo firewall-cmd --remove-port=1025-65535/udp --permanent
+sudo firewall-cmd --add-port=51820/udp --permanent
+sudo firewall-cmd --reload
+
+setup ghostty:
+sudo dnf copr enable scottames/ghostty
+sudo dnf install ghostty
+
+setup vscode:
+    sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc &&
+    echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\nautorefresh=1\ntype=rpm-md\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" | sudo tee /etc/yum.repos.d/vscode.repo > /dev/null
+sudo dnf check-update &&
+sudo dnf install code # or code-insiders
+
+setup wireguard:
+install with wireguard-installer from github
+sudo wg show
+# sudo wg-quick up wg0
+# sudo wg-quick down wg0
+
+
+

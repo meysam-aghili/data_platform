@@ -1,0 +1,35 @@
+[ ] Forgejo
+    rename resume to data platform
+    add ssh
+    add tls
+    add registry
+[ ] client
+    [ ] shipping address form
+        if user select one address and continue to payment and then back to whipping address and make form null and navigate to payment it allows him but must not be this way
+        
+    [ ] cart
+        store cart in db and manage
+    [ ] bill
+        when bill clicked then inventory check happen if ok then decrease inventory
+        if user did not pay after 15 min then inventory revert
+    [ ] unique constraints in db tables (color size, slugs)
+    [ ] bugs
+        price filter min max ui
+        categories mobile view
+    [ ] home page
+    [ ] user register
+        implement send-sms with 3rd party
+    [ ] mobile app
+    [ ] move to react query
+    [ ] rtl and multi lang support
+    [ ] UX
+    [ ] enamad
+    [ ] extra
+
+        product page related products
+        product page comment
+        discount code
+
+[ ] airflow postgres can not be accessd from others ( test if in airflow-cli we can connect to it)
+[ ] pass postgres in nginx
+[ ] etl crawl dag to postgres

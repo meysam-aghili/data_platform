@@ -1,0 +1,62 @@
+version: "3.9"
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+networks:
+  resume:
+    external: true
+
+x-network: &network
+  networks:
+    - resume
+
+services:
+  admin:
+    image: ${LOCAL_REGISTRY}/online_shop_admin:${ADMIN_VERSION}
+    ports:
+      - 5480:5480
+      - 5481:5481
+    environment:
+      PORT: 5480
+      DEV_API_SERVER_PORT: 5481
+      VITE_DOCKER_MODE: "true"
+      SECRET_KEY: FzDDbLgk8FJiro702gCdKDSCvqP3aDNc
+      JWT_SECRET_SALT: Chb7KvNu_vGbsdvg
+      ROOT_USER_PASSWORD: admin
+      HOST: 0.0.0.0
+    volumes:
+      - admin-data:/app
+    # command: ["/prod.sh"]
+    <<: [*network, *deploy-on-front]
+
+volumes:
+  admin-data:

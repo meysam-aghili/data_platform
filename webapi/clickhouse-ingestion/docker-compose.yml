@@ -1,0 +1,71 @@
+version: "3.9"
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+networks:
+  resume:
+    external: true
+
+x-network: &network
+  networks:
+    - resume
+
+services:
+  clickhouse-ingestion-api:
+    image: ${CI_REGISTRY_IMAGE}/api:${API_VERSION}
+    <<: *network
+    environment:
+      CLICKHOUSE_HOST: 192.168.100.47
+      CLICKHOUSE_PORT: 30001
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_DATABASE: snapp
+    ports:
+      - 8000:8000
+    secrets:
+      - CLICKHOUSE_PASSWORD
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNAME_01}
+      update_config:
+        parallelism: 1
+        deploy: 10s
+        order: start-first
+        failure_action: rollback
+    healthcheck:
+      test: ["curl", "-f", "http://localhost:8000/health"]
+      <<: *healthcheck-config
+
+secrets:
+  CLICKHOUSE_PASSWORD:
+    external: true

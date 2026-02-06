@@ -1,0 +1,128 @@
+version: "3.9"
+
+networks:
+  resume:
+    external: true
+
+x-network: &network
+  networks:
+    - resume
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+services:
+  elasticsearch:
+    image: elasticsearch:9.2.0
+    ports:
+      - 9200:9200
+    environment:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      ELASTIC_PASSWORD: elasticpassword
+      discovery.type: single-node
+      node.name: elasticsearch
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+    configs:
+      - source: elastic-config
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+    <<: [*network, *deploy-on-front]
+
+  kibana:
+    image: kibana:9.2.0
+    ports:
+      - 5601:5601
+    environment:
+      KIBANA_SYSTEM_PASSWORD: kibana_system_password
+    configs:
+      - source: kibana-config
+        target: /usr/share/kibana/config/kibana.yml
+    <<: [*network, *deploy-on-front]
+  
+  logstash:
+    image: logstash:9.2.0
+    configs:
+      - source: logstash-config
+        target: /usr/share/logstash/config/logstash.yml
+      - source: logstash-pipeline-config
+        target: /usr/share/logstash/pipeline/logstash.conf
+      - source: logstash-template-nginx
+        target: /usr/share/logstash/nginx_template.json
+    volumes:
+      - /mnt/nfs/nginx:/var/log/nginx:ro
+    ports:
+      - 9600:9600
+    environment:
+      LS_JAVA_OPTS: "-Xms256m -Xmx256m"
+      LOGSTASH_INTERNAL_PASSWORD: logstash_system_password
+    <<: [*network, *deploy-on-host-02]
+      
+  setup:
+    image: elasticsearch:9.2.0
+    configs:
+      - source: elastic-setup-logstash
+        target: /roles/logstash_writer_role.json
+      - source: elastic-setup
+        target: /setup.sh
+    command: /bin/sh /setup.sh
+    <<: *network
+    deploy:
+      mode: replicated-job
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNAME_01}
+
+volumes:
+  elastic_data:
+
+configs:
+  elastic-config:
+    file: ./configs/elasticsearch.yml
+    name: elastic-config_2025-11-13-v1
+  kibana-config:
+    file: ./configs/kibana.yml
+    name: kibana-config_2025-11-13-v1
+  logstash-config:
+    file: ./configs/logstash.yml
+    name: logstash-config_2025-11-13-v1
+  logstash-pipeline-config:
+    file: ./configs/logstash.conf
+    name: logstash-pipeline-config_2025-11-14-v4
+  elastic-setup-logstash:
+    file: ./configs/logstash_writer_role.json
+    name: elastic-setup-logstash_2025-11-13-v2
+  elastic-setup:
+    file: ./configs/setup.sh
+    name: elastic-setup_2025-11-13-v2
+  logstash-template-nginx:
+    file: ./configs/nginx_template.json
+    name: logstash-template-nginx_2025-11-13-v4

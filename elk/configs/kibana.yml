@@ -1,0 +1,13 @@
+server.name: kibana
+server.host: 0.0.0.0
+elasticsearch.hosts: [ "http://elasticsearch:9200" ]
+monitoring.ui.container.elasticsearch.enabled: true
+monitoring.ui.container.logstash.enabled: true
+elasticsearch.username: kibana_system
+elasticsearch.password: ${KIBANA_SYSTEM_PASSWORD}
+
+# Run this from your Kibana container
+# ./bin/kibana-encryption-keys generate
+# xpack.encryptedSavedObjects.encryptionKey: 9a37f49867gec6c4a174bac7d9bdfa72
+# xpack.reporting.encryptionKey: age746726a062e4f278b55b838be6b47
+# xpack.security.encryptionKey: eal790f4718ef9b76b597c99F384357e

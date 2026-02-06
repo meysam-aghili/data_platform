@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7
+    command: "--loglevel warning"
+    volumes:
+      - redis-data:/data
+
+  postgresql:
+    image: kkimurak/sameersbn-postgresql:16
+    volumes:
+      - postgresql-data:/var/lib/postgresql
+    environment:
+      - DB_USER=gitlab
+      - DB_PASS=password
+      - DB_NAME=gitlabhq_production
+      - DB_EXTENSION=pg_trgm,btree_gist
+
+  gitlab:
+    image: sameersbn/gitlab:18.8.2
+    depends_on:
+      - redis
+      - postgresql
+      - registry
+    ports:
+      - 10443:10443
+      - 443:443
+      - 10024:80
+      - 10023:22
+    volumes:
+      - gitlab-data:/home/git/data
+      - ./certs:/home/git/data/certs
+      - ./registry/certs/registry.key:/certs/registry.key
+      - ./registry/certs/registry.crt:/certs/registry.crt
+    healthcheck:
+      test: ["CMD", "/usr/local/sbin/healthcheck"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 5m
+    environment:
+      - DEBUG=false
+
+      - DB_ADAPTER=postgresql
+      - DB_HOST=postgresql
+      - DB_PORT=5432
+      - DB_USER=gitlab
+      - DB_PASS=password
+      - DB_NAME=gitlabhq_production
+
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+      - TZ=Asia/Tehran
+      - GITLAB_TIMEZONE=Tehran
+
+      - GITLAB_HTTPS=true
+      - SSL_SELF_SIGNED=true
+
+      - GITLAB_HOST=git.meysamaghili.ir
+      - GITLAB_PORT=10443
+      - GITLAB_SSH_PORT=10023
+      # - GITLAB_RELATIVE_URL_ROOT=
+      - GITLAB_SECRETS_DB_KEY_BASE=long-and-random-alphanumeric-string
+      - GITLAB_SECRETS_SECRET_KEY_BASE=long-and-random-alphanumeric-string
+      - GITLAB_SECRETS_OTP_KEY_BASE=long-and-random-alphanumeric-string
+      - GITLAB_SECRETS_ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY=["long-and-random-alphanumeric-string"]
+      - GITLAB_SECRETS_ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY=["long-and-random-alphanumeric-string"]
+      - GITLAB_SECRETS_ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT=long-and-random-alphanumeric-string
+
+      - GITLAB_ROOT_PASSWORD=gitpassword
+      - GITLAB_ROOT_EMAIL=meysamaghili533@gmail.com
+
+      - GITLAB_NOTIFY_ON_BROKEN_BUILDS=false
+      - GITLAB_NOTIFY_PUSHER=false
+
+      # - GITLAB_EMAIL=notifications@example.com
+      # - GITLAB_EMAIL_REPLY_TO=noreply@example.com
+      # - GITLAB_INCOMING_EMAIL_ADDRESS=reply@example.com
+
+      # - GITLAB_BACKUP_SCHEDULE=daily
+      # - GITLAB_BACKUP_TIME=01:00
+
+      - SMTP_ENABLED=false
+      # - SMTP_DOMAIN=www.example.com
+      # - SMTP_HOST=smtp.gmail.com
+      # - SMTP_PORT=587
+      # - SMTP_USER=mailer@example.com
+      # - SMTP_PASS=password
+      # - SMTP_STARTTLS=true
+      # - SMTP_AUTHENTICATION=login
+
+      - IMAP_ENABLED=false
+      # - IMAP_HOST=imap.gmail.com
+      # - IMAP_PORT=993
+      # - IMAP_USER=mailer@example.com
+      # - IMAP_PASS=password
+      # - IMAP_SSL=true
+      # - IMAP_STARTTLS=false
+
+      - OAUTH_ENABLED=false
+      - GITLAB_SIGNUP_ENABLED=false
+
+      - GITLAB_REGISTRY_ENABLED=true
+      - GITLAB_REGISTRY_HOST=registry.meysamaghili.ir
+      - GITLAB_REGISTRY_PORT=443
+      - GITLAB_REGISTRY_API_URL=https://registry:5000
+      - GITLAB_REGISTRY_KEY_PATH=/certs/registry.key
+      # - SSL_REGISTRY_KEY_PATH=/certs/registry.key
+      # - SSL_REGISTRY_CERT_PATH=/certs/registry.crt
+      # - GITLAB_REGISTRY_ISSUER=gitlab-issuer
+     
+  registry:
+    image: registry:3.0.0
+    ports:
+      - "5000:5000"
+    volumes:
+        - registry-data:/var/lib/registry
+        - ./registry/certs:/certs
+    environment:
+        - REGISTRY_LOG_LEVEL=info
+        - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry
+        - REGISTRY_AUTH_TOKEN_REALM=https://git.meysamaghili.ir/jwt/auth
+        - REGISTRY_AUTH_TOKEN_SERVICE=container_registry
+        - REGISTRY_AUTH_TOKEN_ISSUER=gitlab-issuer
+        - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/certs/registry.crt
+        - REGISTRY_STORAGE_DELETE_ENABLED=true
+
+        # - REGISTRY_HTTP_ADDR=0.0.0.0:5000
+        # - REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry.crt
+        # - REGISTRY_HTTP_TLS_KEY=/certs/registry.key
+        # - REGISTRY_HTTP_HOST=https://registry.meysamaghili.ir:5000
+
+volumes:
+  redis-data:
+  postgresql-data:
+  gitlab-data:
+  registry-data:

@@ -1,0 +1,78 @@
+version: "3.9"
+    
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+networks:
+  resume:
+    external: true
+
+x-network: &network
+  networks:
+    - resume
+
+services:
+  xray:
+    image: teddysun/xray:25.6.8
+    ports:
+      - 8443:8443
+    configs:
+      - source: xray-config
+        target: /etc/xray/config.json
+    <<: [*network, *deploy-on-host-02]
+  
+  clash:
+    image: dreamacro/clash:latest
+    ports:
+      - 7890:7890   # HTTP/SOCKS proxy
+      - 7891:7891
+      - 1053:1053
+    configs:
+      - source: clash-config
+        target: /root/.config/clash/config.yaml
+    <<: [*network, *deploy-on-host-02]
+
+  adguardhome:
+    image: adguard/adguardhome:v0.107.69
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 3002:3000
+      - 3003:80
+    volumes:
+      - adguardhome-work-data:/opt/adguardhome/work
+      - adguardhome-conf-data:/opt/adguardhome/conf
+    <<: [*network, *deploy-on-host-02]
+
+configs:
+  xray-config:
+    file: ./configs/config.json
+    name: xray-config_2025-11-24-v3
+  clash-config:
+    file: ./configs/config.yaml
+    name: clash-config_2025-11-27-v1
+
+volumes:
+  adguardhome-conf-data:
+  adguardhome-work-data:

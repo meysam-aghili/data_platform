@@ -1,0 +1,68 @@
+version: "3.9"
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+networks:
+  resume:
+    external: true
+
+x-network: &network
+  networks:
+    - resume
+
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:13
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - FORGEJO__server__DOMAIN=git.meysamaghili.ir
+      - FORGEJO__service__SSH_DOMAIN=git.meysamaghili.ir
+      - FORGEJO__service__SSH_PORT=222
+      - FORGEJO__server__ROOT_URL=http://git.meysamaghili.ir:3000/
+      - FORGEJO__database__DB_TYPE=sqlite3
+      - FORGEJO__database__PATH=/data/gitea/forgejo.db
+      - FORGEJO__security__INSTALL_LOCK=true
+      - FORGEJO__service__DISABLE_REGISTRATION=true # set true after first login
+    volumes:
+      - forgejo-data:/data
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 3000:3000
+      - 222:22
+    <<: [*network, *deploy-on-front]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      <<: *healthcheck-config
+
+volumes:
+  forgejo-data:

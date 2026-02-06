@@ -1,0 +1,72 @@
+port: 7890        # HTTP/HTTPS proxy (or your Xray outbound type)
+socks-port: 7890  # If using SOCKS5
+redir-port: 0
+allow-lan: true
+bind-address: "0.0.0.0"
+dns:
+  log-level: info
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: false
+  enhanced-mode: fake-ip
+  nameserver:
+    - adguardhome:53
+  fallback:
+    - 1.1.1.1
+    - 8.8.8.8
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - "*"
+rules:
+  # Common ad / tracking domains
+  - DOMAIN-SUFFIX,googlesyndication.com,REJECT  
+  - DOMAIN-SUFFIX,googleadservices.com,REJECT  
+  - DOMAIN-SUFFIX,google-analytics.com,REJECT  
+
+  # Additional ad/tracking domains
+  - DOMAIN,ad.doubleclick.net,REJECT
+  - DOMAIN,ad.youtube.com,REJECT
+  - DOMAIN,ads.youtube.com,REJECT
+  - DOMAIN,pagead.googlesyndication.com,REJECT
+  - DOMAIN,pagead1.googlesyndication.com,REJECT
+  - DOMAIN,pagead2.googlesyndication.com,REJECT
+  - DOMAIN,pagead.l.doubleclick.net,REJECT
+  - DOMAIN,googleadservices.com,REJECT
+  - DOMAIN,googleads.g.doubleclick.net,REJECT
+  - DOMAIN,securepubads.g.doubleclick.net,REJECT
+  - DOMAIN,pubads.g.doubleclick.net,REJECT
+  - DOMAIN,s0.2mdn.net,REJECT
+  - DOMAIN,pixel.moatads.com,REJECT
+  - DOMAIN,adservice.google.com,REJECT
+
+
+  # SoundCloud Ad-blocking (Extended)
+  - DOMAIN-SUFFIX,ads.soundcloud.com,REJECT
+  # - DOMAIN,promoted.soundcloud.com,REJECT
+  # - DOMAIN,events-api.soundcloud.com,REJECT
+  # - DOMAIN-SUFFIX,andcdn.com,REJECT
+  # - DOMAIN-SUFFIX,sndcdn.com,REJECT
+  # - DOMAIN-SUFFIX,eventgateway.soundcloud.com,REJECT
+  # - DOMAIN-SUFFIX,eventlogger.soundcloud.com,REJECT
+  # - DOMAIN-SUFFIX,soundcloud-pax.pandora.com,REJECT
+  # - DOMAIN-SUFFIX,telemetry.soundcloud.com,REJECT
+  # - DOMAIN-SUFFIX,collector.soundcloud.com,REJECT
+  # - DOMAIN-SUFFIX,tracking.soundcloud.com,REJECT
+  # - DOMAIN-SUFFIX,metrics.soundcloud.com,REJECT
+  # - DOMAIN-SUFFIX,impression.soundcloud.com,REJECT
+  # - DOMAIN-SUFFIX,api-v2.soundcloud.com,REJECT
+  # - DOMAIN-SUFFIX,spotxchange.com,REJECT
+  # - DOMAIN-SUFFIX,spotx.tv,REJECT
+  # - DOMAIN-SUFFIX,adnxs.com,REJECT
+  # - DOMAIN-SUFFIX,adnxs-simple.com,REJECT
+  # - DOMAIN-SUFFIX,adsrvr.org,REJECT
+  # - DOMAIN-SUFFIX,moatads.com,REJECT
+  # - DOMAIN-SUFFIX,google-analytics.com,REJECT
+  # - DOMAIN-SUFFIX,googletagmanager.com,REJECT
+  # - DOMAIN-SUFFIX,adjust.com,REJECT
+  # - DOMAIN-SUFFIX,branch.io,REJECT
+  # - DOMAIN-SUFFIX,app-measurement.com,REJECT
+  # - DOMAIN-SUFFIX,firebaseinstallations.googleapis.com,REJECT
+
+  # Fallback
+  - MATCH,DIRECT

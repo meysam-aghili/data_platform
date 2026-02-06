@@ -1,0 +1,20 @@
+on: [push]
+
+jobs:
+  test:
+    runs-on: home
+    container:
+      image: node:22-bookworm-dev
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+    steps:
+
+      - name: Clone repo
+        run: |
+          git clone http://git.meysamaghili.ir:3000/meysam/resume.git
+          
+      - name: Deploy Forgejo
+        run: |
+          cd resume
+          ./parse_compose_envs.sh forgejo/docker-compose.yml .env
+          docker stack deploy -c forgejo/docker-compose.prod.yml forgejo

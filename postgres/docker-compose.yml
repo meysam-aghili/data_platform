@@ -1,0 +1,74 @@
+version: "3.9"
+
+networks:
+  resume:
+    external: true
+
+x-network: &network
+  networks:
+    - resume
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+services:
+  postgres:
+    image: postgres:14.15-alpine3.21
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    configs:
+      - source: postgres-config
+        target: /etc/postgresql.conf
+    command: ["postgres", "-c", "config_file=/etc/postgresql.conf"] # to avoid overlap with postgresql.conf file bug error
+    secrets:
+      - POSTGRES_PASSWORD
+    user: postgres
+    <<: [*network, *deploy-on-front]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost", "-p", "5432"]
+      <<: *healthcheck-config
+
+secrets:
+  POSTGRES_PASSWORD:
+    external: true
+
+volumes:
+  postgres-data:
+
+configs:
+  postgres-config:
+    file: ./config/postgresql.conf
+    name: postgres-config_2025-11-10-v1

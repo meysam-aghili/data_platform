@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Api/Api.csproj" Id="8b7ca835-0db9-4f88-8ed7-17a339e328aa" />
+  <Project Path="Shared/Shared.csproj" />
+</Solution>

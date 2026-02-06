@@ -1,0 +1,23 @@
+log_debug: false
+hack_me_please: true
+
+
+server:
+  http:
+    listen_addr: ':80'
+users:
+  - name: 'clickhouse_chproxy'
+    password: "clickhouse_chproxy"
+    to_cluster: 'cluster_nesaj'
+    to_user: 'clickhouse'
+    # max_concurrent_queries: 100
+    # max_execution_time: 30s
+    # requests_per_minute: 10
+    # Allow `CORS` requests for `tabix`.
+    allow_cors: true
+clusters:
+  - name: 'cluster_nesaj'
+    nodes: ['clickhouse-node-01:8123', 'clickhouse-node-02:8123']
+    users:
+      - name: "clickhouse"
+        password: "clickhouse"

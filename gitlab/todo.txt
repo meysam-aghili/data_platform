@@ -1,0 +1,5 @@
+ docker login registry.meysamaghili.ir
+Username: meysamaghili533@gmail.com
+Password:
+time="2026-02-03T02:15:11+03:30" level=info msg="Error logging in to endpoint, trying next endpoint" endpoint="{https://registry.meysamaghili.ir 0xc00037a5a0}" error="Get \"https://registry.meysamaghili.ir/v2/\": tls: failed to verify certificate: x509: certificate is not valid for any names, but wanted to match registry.meysamaghili.ir"
+Get "https://registry.meysamaghili.ir/v2/": tls: failed to verify certificate: x509: certificate is not valid for any names, but wanted to match registry.meysamaghili.ir

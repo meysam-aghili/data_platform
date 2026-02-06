@@ -1,0 +1,81 @@
+version: "3.9"
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+networks:
+  resume:
+    external: true
+
+x-network: &network
+  networks:
+    - resume
+
+x-minio-common: &minio-common
+  image: minio/minio:RELEASE.2024-08-17T01-24-54Z
+  # command: 'server --console-address ":9001" http://minio{1...2}/data{1...2}'
+  command: 'server --console-address ":9001" /data{1...2}'
+  environment:
+    # MINIO_DISTRIBUTED_MODE_ENABLED: 'yes'
+    # MINIO_DISTRIBUTED_NODES: 'minio1,minio2'
+    # MINIO_STORAGE_CLASS_STANDARD: 'EC:2'
+    # MINIO_ERASURE_SET_DRIVE_COUNT: '4'
+    # MINIO_ERASURE_SET_COUNT: '2'
+    MINIO_PROMETHEUS_AUTH_TYPE: 'public'
+    # MINIO_SERVER_URL:
+    MINIO_ROOT_USER: admin
+    MINIO_ROOT_PASSWORD: adminpassword123
+  <<: *network
+  healthcheck:
+    test: ["CMD", "mc", "ready", "local"]
+    <<: *healthcheck-config
+
+services:
+  minio1:
+    <<: [*minio-common, *deploy-on-front]
+    ports:
+      - 9002:9000
+      - 9001:9001
+    volumes:
+      - minio1data1:/data1
+      - minio1data2:/data2
+
+  # minio2:
+  #   <<: [*minio-common, *deploy-on-front]
+  #   volumes:
+  #     - minio2data1:/data1
+  #     - minio2data2:/data2
+
+volumes:
+  minio1data1:
+  minio1data2:
+  # minio2data1:
+  # minio2data2:

@@ -36,6 +36,9 @@ services:
     image: nginx:1.29.2-alpine3.22
     <<: *deploy-on-front
     network_mode: host
+    ports:
+      - 80:80
+      - 443:443
     environment:
       TZ: Asia/Tehran
     configs:

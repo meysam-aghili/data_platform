@@ -11,10 +11,16 @@ jobs:
 
       - name: Clone repo
         run: |
-          git clone http://git.meysamaghili.ir:3000/meysam/resume.git
+          git clone http://git.meysamaghili.ir:3000/meysam/data_platform.git
           
-      - name: Deploy Forgejo
+      - name: Deploy forgejo
         run: |
-          cd resume
+          cd data_platform
           ./parse_compose_envs.sh forgejo/docker-compose.yml .env
           docker stack deploy -c forgejo/docker-compose.prod.yml forgejo
+
+      - name: Deploy nginx
+        run: |
+          cd data_platform
+          ./parse_compose_envs.sh nginx/docker-compose.yml .env
+          docker stack deploy -c nginx/docker-compose.prod.yml nginx

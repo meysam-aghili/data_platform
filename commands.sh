@@ -2,6 +2,7 @@
 sudo apt update
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d meysamaghili.ir -d www.meysamaghili.ir
+sudo certbot --nginx -d git.meysamaghili.ir -d www.git.meysamaghili.ir
 
 # nfs 
 ## server side
@@ -29,12 +30,15 @@ sudo apt install gitlab-runner
 sudo usermod -aG docker gitlab-runner
 
 # internal
-docker network create --driver overlay --scope swarm --attachable resume || echo "network already exists. skipping."
+docker network create --driver overlay --scope swarm --attachable data_platform || echo "network already exists. skipping."
 mkdir /mnt/nfs/nginx
 mkdir -p /mnt/nfs/grafana/dashboards
 cd /etc/letsencrypt/live/meysamaghili.ir/
 docker secret create RESUME_SSL_CERT ./fullchain.pem
 docker secret create RESUME_SSL_KEY privkey.pem
+cd /etc/letsencrypt/live/git.meysamaghili.ir/
+docker secret create GIT_SSL_CERT ./fullchain.pem
+docker secret create GIT_SSL_KEY privkey.pem
 printf "postgresql+psycopg2://airflow:airflow@postgres/airflow" | docker secret create AIRFLOW_DB_CONN_URI -
 printf "db+postgresql://airflow:airflow@postgres/airflow" | docker secret create AIRFLOW_DB_BACKEND_CONN_URI -
 printf "airflow" | docker secret create AIRFLOW_POSTGRES_PASSWORD -

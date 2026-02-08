@@ -12,7 +12,7 @@
 # receivers:
 #   - name: 'slack'
 #     slack_configs:
-#       - api_url: "https://hooks.slack.com/services/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-edited-by-me"
+#       - api_url: ""
 #         username: 'Alert Manager'
 #         title: "{{ .CommonAnnotations.summary }}"
 #         text: "Alert: {{ .CommonAnnotations.description }}"

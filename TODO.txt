@@ -1,5 +1,5 @@
 [ ] Forgejo
-    add ssh
+    sync github
 [ ] registry
 [ ] xray on netherland
 [ ] observe

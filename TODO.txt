@@ -25,11 +25,9 @@
     [ ] UX
     [ ] enamad
     [ ] extra
-
         product page related products
         product page comment
         discount code
-
 [ ] airflow postgres can not be accessd from others ( test if in airflow-cli we can connect to it)
 [ ] pass postgres in nginx
 [ ] etl crawl dag to postgres

@@ -47,7 +47,9 @@ services:
       - USER_GID=1000
       - FORGEJO__server__DOMAIN=git.meysamaghili.ir
       - FORGEJO__service__SSH_DOMAIN=git.meysamaghili.ir
-      - FORGEJO__service__SSH_PORT=222
+      - FORGEJO__service__SSH_PORT=10222
+      - FORGEJO__server__SSH_SERVER_PORT=10222
+      - FORGEJO__server__SSH_DOMAIN=git.meysamaghili.ir
       - FORGEJO__server__ROOT_URL=https://git.meysamaghili.ir/
       - FORGEJO__database__DB_TYPE=sqlite3
       - FORGEJO__database__PATH=/data/gitea/forgejo.db
@@ -58,7 +60,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
     ports:
       - 3000:3000
-      - 222:22
+      - 10222:22
     <<: [*network, *deploy-on-front]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]

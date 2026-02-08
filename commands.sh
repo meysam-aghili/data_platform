@@ -43,3 +43,6 @@ printf "postgresql+psycopg2://airflow:airflow@postgres/airflow" | docker secret 
 printf "db+postgresql://airflow:airflow@postgres/airflow" | docker secret create AIRFLOW_DB_BACKEND_CONN_URI -
 printf "airflow" | docker secret create AIRFLOW_POSTGRES_PASSWORD -
 printf "123456789" | docker secret create POSTGRES_PASSWORD -
+
+# create ssh key
+ssh-keygen -t ed25519 -C "meysamaghili533@gmail.com"

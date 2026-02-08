@@ -1,6 +1,8 @@
 [ ] Forgejo
     add ssh
-    add registry
+[ ] registry
+[ ] xray on netherland
+[ ] observe
 [ ] client
     [ ] shipping address form
         if user select one address and continue to payment and then back to whipping address and make form null and navigate to payment it allows him but must not be this way

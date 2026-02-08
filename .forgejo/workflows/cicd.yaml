@@ -11,7 +11,7 @@ jobs:
 
       - name: Clone repo
         run: |
-          git clone http://git.meysamaghili.ir:3000/meysam/data_platform.git
+          git clone https://git.meysamaghili.ir/meysam/data_platform.git
           
       - name: Deploy forgejo
         run: |

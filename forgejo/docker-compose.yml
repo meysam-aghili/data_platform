@@ -46,9 +46,7 @@ services:
       - USER_UID=1000
       - USER_GID=1000
       - FORGEJO__server__DOMAIN=git.meysamaghili.ir
-      - FORGEJO__service__SSH_DOMAIN=git.meysamaghili.ir
-      - FORGEJO__service__SSH_PORT=10222
-      - FORGEJO__server__SSH_SERVER_PORT=10222
+      - FORGEJO__server__SSH_PORT=10222
       - FORGEJO__server__SSH_DOMAIN=git.meysamaghili.ir
       - FORGEJO__server__ROOT_URL=https://git.meysamaghili.ir/
       - FORGEJO__database__DB_TYPE=sqlite3

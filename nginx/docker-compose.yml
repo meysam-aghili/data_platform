@@ -77,4 +77,4 @@ secrets:
 configs:
   nginx-config:
     file: ./configs/nginx.conf
-    name: nginx-config_2026-02-06-v11
+    name: nginx-config_2026-02-09-v1

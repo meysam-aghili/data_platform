@@ -46,7 +46,7 @@ services:
       - ${MSSQL_PORT}:1433
     environment:
       ACCEPT_EULA: 'Y'
-      MSSQL_SA_PASSWORD: Sh!@#12345
+      MSSQL_SA_PASSWORD: testpassword
     volumes:
       - mssql-data:/var/opt/mssql
     <<: [*network, *deploy-on-front]

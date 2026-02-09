@@ -1,5 +1,3 @@
-[ ] Forgejo
-    sync github, set mirror, push protection secret at alertmanager gir mide vali pakesh ham kardim
 [ ] registry
 [ ] xray on netherland
 [ ] observe

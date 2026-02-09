@@ -32,31 +32,31 @@ x-deploy-on-host-03: &deploy-on-host-03
 ##################################################################
 
 networks:
-  resume:
+  data_platform:
     external: true
 
 x-network: &network
   networks:
-    - resume
+    - data_platform
 
 services:
   portainer:
-    image: portainer/portainer-ce:2.26.1-alpine
+    image: portainer/portainer-ce:2.38.0-alpine
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
+      - portainer-data:/data
     ports:
       - 9000:9000
-    <<: [*network, *deploy-on-host-02]
+    <<: [*network, *deploy-on-front]
 
   registry:
     image: registry:3.0.0
-    hostname: registry
+    # hostname: registry
     ports:
       - 5000:5000
       # - 443:443 remove 5000:5000 and add 443:443 if you want to use SSL
-    volumes:
-      - registry_data:/var/lib/registry
+    # volumes:
+    #   - registry-data:/var/lib/registry
     environment:
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
       # REGISTRY_HTTP_ADDR: 0.0.0.0:443
@@ -68,5 +68,5 @@ services:
     <<: [*network, *deploy-on-front]
 
 volumes:
-  portainer_data:
-  registry_data:
+  portainer-data:
+  registry-data:

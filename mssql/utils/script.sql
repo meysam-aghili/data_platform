@@ -27,7 +27,7 @@ AS
 		WHERE id BETWEEN (@PageNumber-1)*@PageSize AND @PageNumber*@PageSize
 	END
 
-CREATE LOGIN [api] WITH PASSWORD = 'Sh!@$%^567';
+CREATE LOGIN [api] WITH PASSWORD = 'testpass';
 CREATE USER api FOR LOGIN api;
 ALTER ROLE db_datareader ADD MEMBER api;
 GRANT EXEC TO [api];

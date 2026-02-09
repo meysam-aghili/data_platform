@@ -57,3 +57,13 @@ sudo ufw allow 4789/udp
 
 # Allow all listening ports
 sudo ufw disable
+
+
+# Edit /etc/docker/daemon.json
+{
+  "insecure-registries": ["registry.meysamaghili.ir"]
+}
+# Copy your registry's CA certificate to Docker
+sudo mkdir -p /etc/docker/certs.d/registry.meysamaghili.ir
+sudo cp /etc/letsencrypt/live/registry.meysamaghili.ir/fullchain.pem /etc/docker/certs.d/registry.meysamaghili.ir/ca.crt
+sudo systemctl restart docker

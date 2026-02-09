@@ -3,6 +3,8 @@ sudo apt update
 sudo apt install certbot python3-certbot-nginx
 sudo certbot --nginx -d meysamaghili.ir -d www.meysamaghili.ir
 sudo certbot --nginx -d git.meysamaghili.ir -d www.git.meysamaghili.ir
+# or manually
+sudo certbot certonly --manual --preferred-challenges dns -d git.meysamaghili.ir
 
 # nfs 
 ## server side

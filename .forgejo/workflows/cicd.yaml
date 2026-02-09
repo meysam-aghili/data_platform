@@ -24,3 +24,9 @@ jobs:
           cd data_platform
           ./parse_compose_envs.sh nginx/docker-compose.yml .env
           docker stack deploy -c nginx/docker-compose.prod.yml nginx
+
+      - name: Deploy docker
+        run: |
+          cd data_platform
+          ./parse_compose_envs.sh docker/docker-compose.yml .env
+          docker stack deploy -c docker/docker-compose.prod.yml docker

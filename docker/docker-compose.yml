@@ -51,21 +51,25 @@ services:
 
   registry:
     image: registry:3.0.0
-    # hostname: registry
     ports:
       - 5000:5000
-      # - 443:443 remove 5000:5000 and add 443:443 if you want to use SSL
     # volumes:
     #   - registry-data:/var/lib/registry
     environment:
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
-      REGISTRY_HTTP_HOST: https://registry.meysamaghili.ir 
-      # REGISTRY_HTTP_TLS_CERTIFICATE: /run/secrets/registry_ssl_crt
-      # REGISTRY_HTTP_TLS_KEY: /run/secrets/registry_ssl_key
-    # secrets:
-    #   - registry_ssl_crt
-    #   - registry_ssl_key
+      REGISTRY_HTTP_HOST: https://registry.meysamaghili.ir
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: registry.meysamaghili.ir
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+    configs:
+      - source: registry-htpasswd
+        target: /auth/htpasswd
     <<: [*network, *deploy-on-front]
+
+configs:
+  registry-htpasswd:
+    name: ./configs/htpasswd
+    file: registry-htpasswd_2026-02-09-v1
 
 volumes:
   portainer-data:

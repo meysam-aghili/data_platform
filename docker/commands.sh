@@ -67,3 +67,6 @@ sudo ufw disable
 sudo mkdir -p /etc/docker/certs.d/registry.meysamaghili.ir
 sudo cp /etc/letsencrypt/live/registry.meysamaghili.ir/fullchain.pem /etc/docker/certs.d/registry.meysamaghili.ir/ca.crt
 sudo systemctl restart docker
+
+#htpasswd for registry auth
+docker run --rm httpd:2.4-alpine htpasswd -Bbn meysamaghili533@gmail.com pass > auth/htpasswd

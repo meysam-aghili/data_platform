@@ -53,8 +53,8 @@ services:
     image: registry:3.0.0
     ports:
       - 5000:5000
-    # volumes:
-    #   - registry-data:/var/lib/registry
+    volumes:
+      - registry-data:/var/lib/registry
     environment:
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
       REGISTRY_HTTP_HOST: https://registry.meysamaghili.ir

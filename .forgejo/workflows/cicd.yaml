@@ -9,24 +9,29 @@ jobs:
         - /var/run/docker.sock:/var/run/docker.sock
     steps:
 
-      - name: Clone repo
+      # - name: Clone repo
+      #   run: |
+      #     git clone https://git.meysamaghili.ir/meysam/data_platform.git
+
+      - name: Docker login
         run: |
-          git clone https://git.meysamaghili.ir/meysam/data_platform.git
+          echo ${{ secrets.CI_REGISTRY_PASSWORD }}
+          docker login registry.meysamaghili.ir -u meysamaghili533@gmail.com -p '${{ secrets.CI_REGISTRY_PASSWORD }}'
           
-      - name: Deploy forgejo
-        run: |
-          cd data_platform
-          ./parse_compose_envs.sh forgejo/docker-compose.yml .env
-          docker stack deploy -c forgejo/docker-compose.prod.yml forgejo
+      # - name: Deploy forgejo
+      #   run: |
+      #     cd data_platform
+      #     ./parse_compose_envs.sh forgejo/docker-compose.yml .env
+      #     docker stack deploy -c forgejo/docker-compose.prod.yml forgejo
 
-      - name: Deploy nginx
-        run: |
-          cd data_platform
-          ./parse_compose_envs.sh nginx/docker-compose.yml .env
-          docker stack deploy -c nginx/docker-compose.prod.yml nginx
+      # - name: Deploy nginx
+      #   run: |
+      #     cd data_platform
+      #     ./parse_compose_envs.sh nginx/docker-compose.yml .env
+      #     docker stack deploy -c nginx/docker-compose.prod.yml nginx
 
-      - name: Deploy docker
-        run: |
-          cd data_platform
-          ./parse_compose_envs.sh docker/docker-compose.yml .env
-          docker stack deploy -c docker/docker-compose.prod.yml docker
+      # - name: Deploy docker
+      #   run: |
+      #     cd data_platform
+      #     ./parse_compose_envs.sh docker/docker-compose.yml .env
+      #     docker stack deploy -c docker/docker-compose.prod.yml docker

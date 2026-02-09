@@ -1,0 +1,289 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+x-kafka-common: &kafka-common
+  image: ${KAFKA_IMAGE}
+  <<: *network
+
+x-kafka-common-env: &kafka-common-env
+  KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-controller-01:${KAFKA_CONTROLLER_01_PORT},2@kafka-controller-02:${KAFKA_CONTROLLER_02_PORT},3@kafka-controller-03:${KAFKA_CONTROLLER_03_PORT} # in case of controller failure, these can vote for new leader controller
+  KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+  CLUSTER_ID: YqLu9-0pSQ6QQCZqFsJlVg
+
+x-kafka-controller-envs: &kafka-controller-envs
+  <<: *kafka-common-env
+  KAFKA_PROCESS_ROLES: controller
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT # listener_name:security_protocol for communication encryption protocol
+  KAFKA_HEAP_OPTS: '-Xms1g -Xmx1g' # set min max of heap memory size
+  KAFKA_OPTS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=${KAFKA_CONTROLLER_METRICS_PORT}:/home/appuser/kafka-controller-exporter.yml"
+
+x-kafka-broker-envs: &kafka-broker-envs
+  <<: *kafka-common-env
+  KAFKA_PROCESS_ROLES: broker
+  KAFKA_FETCH_MAX_BYTES: ${KAFKA_BROKER_MAX_MSG_BYTES} # max message size that a consumer can consume from kafka
+  KAFKA_MESSAGE_MAX_BYTES: ${KAFKA_BROKER_MAX_MSG_BYTES} # max message size that a producer can produce to kafka
+  KAFKA_REPLICA_FETCH_MAX_BYTES: ${KAFKA_BROKER_MAX_MSG_BYTES} # max message size that a follower replica can consume from leader replica
+  KAFKA_REPLICA_FETCH_RESPONSE_MAX_BYTES: ${KAFKA_BROKER_MAX_MSG_BYTES} # max message size that a leader replica can produce to follower replica 
+  KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INT
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INT:PLAINTEXT,PLAINTEXT_EXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+  KAFKA_HEAP_OPTS: '-Xms${KAFKA_BROKER_HEAP_GBS}g -Xmx${KAFKA_BROKER_HEAP_GBS}g'
+  KAFKA_OPTS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=${KAFKA_BROKER_METRICS_PORT}:/home/appuser/kafka-broker-exporter.yml"
+  # KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INT:PLAINTEXT,PLAINTEXT_EXT:PLAINTEXT,SASL_EXT:SASL_PLAINTEXT,SASL_INT:SASL_PLAINTEXT
+  # KAFKA_INTER_BROKER_LISTENER_NAME: SASL_INT
+  # KAFKA_OPTS:
+  #   -Djava.security.auth.login.config=/run/secrets/KAFKA_JAAS
+  # KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+  # KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+  # KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+  # KAFKA_SUPER_USERS: "User:admin"
+
+x-kafka-connect-common: &kafka-connect-common
+  image: ${KAFKA_CONNECT_IMAGE}
+  <<: *network
+x-kafka-connect-envs: &kafka-connect-envs
+  CONNECT_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+  CONNECT_REST_PORT: 8083
+  CONNECT_GROUP_ID: kafka-connect
+  CONNECT_CONFIG_STORAGE_TOPIC: _kafka_connect-configs
+  CONNECT_STATUS_STORAGE_TOPIC: _kafka_connect-statuses
+  CONNECT_OFFSET_STORAGE_TOPIC: _kafka_connect-offsets
+  CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+  CONNECT_VALUE_CONVERTER: io.confluent.connect.avro.AvroConverter
+  CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://kafka-schema-registry:8081
+  CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
+  CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
+  CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
+  CONNECT_COMPRESSION_TYPE: lz4
+  CONNECT_BATCH_SIZE: 65536 # 64kb max batch size that a sink connector can produce to destination
+  CONNECT_LINGER_MS: 100 # max time that a sink connector waits for a batch to be gathered
+  CONNECT_ACKS: -1 # waits for all replicas for a partition to ack when transmiting a message. if 0 then not wait
+  CONNECT_BUFFER_MEMORY: 268435456 # 4294967296 # 4gb max size to hold sink source data in memory
+  CONNECT_MAX_REQUEST_SIZE: 67108864 # 64mb # max message size that a connector can transmit in kafka
+  KAFKA_HEAP_OPTS: '-Xmx${KAFKA_CONNECT_HEAP_GBS}g -Xms${KAFKA_CONNECT_HEAP_GBS}g'
+  KAFKA_OPTS: "-javaagent:/home/appuser/jmx_prometheus_javaagent-1.0.0.jar=${KAFKA_CONNECT_METRICS_PORT}:/home/appuser/kafka-connect-exporter.yml" 
+
+services:
+
+  kafka-controller-01:
+    <<: [*kafka-common, *deploy-on-host-01]
+    hostname: kafka-controller-01
+    ports:
+      - ${KAFKA_CONTROLLER_01_PORT}:${KAFKA_CONTROLLER_01_PORT}
+    # volumes:
+    #   - kafka-controller-01-data:/var/lib/kafka/data
+    environment:
+      <<: *kafka-controller-envs
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENERS: CONTROLLER://:${KAFKA_CONTROLLER_01_PORT}
+
+  kafka-controller-02:
+    hostname: kafka-controller-02
+    <<: [*kafka-common, *deploy-on-host-02]
+    ports:
+      - ${KAFKA_CONTROLLER_02_PORT}:${KAFKA_CONTROLLER_02_PORT}
+    # volumes:
+    #   - kafka-controller-02-data:/var/lib/kafka/data
+    environment:
+      <<: *kafka-controller-envs
+      KAFKA_NODE_ID: 2
+      KAFKA_LISTENERS: CONTROLLER://:${KAFKA_CONTROLLER_02_PORT}
+
+  kafka-controller-03:
+    hostname: kafka-controller-03
+    <<: [*kafka-common, *deploy-on-host-03]
+    ports:
+      - ${KAFKA_CONTROLLER_03_PORT}:${KAFKA_CONTROLLER_03_PORT}
+    # volumes:
+    #   - kafka-controller-03-data:/var/lib/kafka/data
+    environment:
+      <<: *kafka-controller-envs
+      KAFKA_NODE_ID: 3
+      KAFKA_LISTENERS: CONTROLLER://:${KAFKA_CONTROLLER_03_PORT}
+
+  kafka-broker-01:
+    <<: [*kafka-common, *deploy-on-host-01]
+    hostname: kafka-broker-01
+    ports:
+      - ${KAFKA_BROKER_01_EXT_PORT}:${KAFKA_BROKER_01_EXT_PORT}
+      - ${KAFKA_BROKER_01_INT_PORT}:${KAFKA_BROKER_01_INT_PORT}
+    # volumes:
+    #   - kafka-broker-01-data:/var/lib/kafka/data
+    environment:
+      <<: *kafka-broker-envs
+      KAFKA_NODE_ID: 4
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_01_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_01_EXT_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-01:${KAFKA_BROKER_01_INT_PORT},PLAINTEXT_EXT://${HOSTIP_01}:${KAFKA_BROKER_01_EXT_PORT}
+
+  kafka-broker-02:
+    <<: [*kafka-common, *deploy-on-host-02]
+    hostname: kafka-broker-02
+    ports:
+      - ${KAFKA_BROKER_02_EXT_PORT}:${KAFKA_BROKER_02_EXT_PORT}
+      - ${KAFKA_BROKER_02_INT_PORT}:${KAFKA_BROKER_02_INT_PORT}
+    # volumes:
+    #   - kafka-broker-02-data:/var/lib/kafka/data
+    environment:
+      <<: *kafka-broker-envs
+      KAFKA_NODE_ID: 5
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_02_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_02_EXT_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-02:${KAFKA_BROKER_02_INT_PORT},PLAINTEXT_EXT://${HOSTIP_02}:${KAFKA_BROKER_02_EXT_PORT}
+
+  kafka-broker-03:
+    <<: [*kafka-common, *deploy-on-host-03]
+    hostname: kafka-broker-03
+    ports:
+      - ${KAFKA_BROKER_03_EXT_PORT}:${KAFKA_BROKER_03_EXT_PORT}
+      - ${KAFKA_BROKER_03_INT_PORT}:${KAFKA_BROKER_03_INT_PORT}
+    # volumes:
+    #   - kafka-broker-03-data:/var/lib/kafka/data
+    environment:
+      <<: *kafka-broker-envs
+      KAFKA_NODE_ID: 6
+      KAFKA_LISTENERS: PLAINTEXT_INT://0.0.0.0:${KAFKA_BROKER_03_INT_PORT},PLAINTEXT_EXT://0.0.0.0:${KAFKA_BROKER_03_EXT_PORT}
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INT://kafka-broker-03:${KAFKA_BROKER_03_INT_PORT},PLAINTEXT_EXT://${HOSTIP_03}:${KAFKA_BROKER_03_EXT_PORT}
+
+  kafka-connect-01:
+    <<: [*kafka-connect-common, *deploy-on-host-01]
+    hostname: kafka-connect-01
+    ports:
+      - ${KAFKA_CONNECT_REST_PORT}:8083
+    environment:
+      <<: *kafka-connect-envs
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-01
+
+  # kafka-connect-02:
+  #   <<: [*kafka-connect-common, *deploy-on-host-02]
+  #   hostname: kafka-connect-02
+  #   environment:
+  #     <<: *kafka-connect-envs
+  #     CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-02
+
+  # kafka-connect-03:
+  #   <<: [*kafka-connect-common, *deploy-on-host-03]
+  #   hostname: kafka-connect-03
+  #   environment:
+  #     <<: *kafka-connect-envs
+  #     CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect-03
+
+  kafka-schema-registry:
+    image: ${KAFKA_SCHEMA_REGISTRY_IMAGE}
+    ports:
+      - ${KAFKA_SCHEMA_REGISTRY_PORT}:8081
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: kafka-schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: http
+    <<: [*network, *deploy-on-front]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081"]
+      <<: *healthcheck-config
+
+  kafka-rest-proxy:
+    image: ${KAFKA_REST_PROXY_IMAGE}
+    ports:
+      - ${KAFKA_REST_PROXY_PORT}:8082
+    environment:
+      KAFKA_REST_HOST_NAME: kafka-rest-proxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+      KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://kafka-schema-registry:8081'
+    <<: [*network, *deploy-on-front]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082"]
+      <<: *healthcheck-config
+
+  kafka-ui:
+    image: ${KAFKA_UI_IMAGE}
+    ports:
+      - ${KAFKA_UI_PORT}:8080
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+      KAFKA_CLUSTERS_0_NAME: production
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9997
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: production
+      KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: "http://kafka-connect-01:8083"
+      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: "http://kafka-schema-registry:8081"
+      KAFKA_CLUSTERS_0_KSQLDBSERVER: "http://ksqldb-01:8088"
+    <<: [*deploy-on-front, *network]
+
+  # ksqldb-01:
+  #   image: ksqldb:${KSQLDB_VERSION} # confluentinc/cp-ksql-server:${KSQL_VERSION} confluentinc/ksqldb-server:${KSQL_VERSION}
+  #   hostname: ksqldb-01
+  #   ports:
+  #     - ${KSQLDB_PORT}:8088
+  #   environment:
+  #     KSQL_KSQL_SERVICE_ID: ksqldb
+  #     KSQL_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+  #     KSQL_KSQL_SINK_REPLICAS: 3
+  #     KSQL_KSQL_STREAMS_REPLICATION_FACTOR: 1
+  #     KSQL_KSQL_INTERNAL_TOPIC_REPLICAS: 3
+  #     KSQL_KSQL_STREAMS_STATE_DIR: /data/ksqldb/
+  #     KSQL_KSQL_STREAMS_AUTO_OFFSET_RESET: latest
+  #     KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+  #     KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+  #     KSQL_KSQL_SCHEMA_REGISTRY_URL: http://kafka-schema-registry:8081
+  #     KSQL_KSQL_CONNECT_URL: http://kafka-connect-01:8083
+  #     KSQL_LISTENERS: http://0.0.0.0:8088
+  #     KSQL_KSQL_ADVERTISED_LISTENER: http://ksqldb-01:8088
+  #   # volumes:
+  #   #   - ksqldb-01-data:/data/ksqldb/
+  #   <<: *network
+  #   <<: *deploy-on-host-01
+
+  # ksqldb-cli:
+  #   image: confluentinc/cp-ksql-cli:${KSQLDB_CLI_VERSION}
+  #   <<: *network
+  #   <<: *deploy-on-front
+  #   command: ["ksql", "http://ksqldb-01:8088"]
+  #   sentrypoint: /bin/sh
+  #   tty: true
+  
+# volumes:
+#   kafka-broker-01-data:
+#   kafka-broker-02-data:
+#   kafka-broker-03-data:
+#   kafka-controller-01-data:
+#   kafka-controller-02-data:
+#   kafka-controller-03-data:
+#   # ksqldb-01-data:

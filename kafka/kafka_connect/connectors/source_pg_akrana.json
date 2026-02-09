@@ -1,0 +1,29 @@
+{
+	"name": "source-postgres-akrana-sales",
+	"config": {
+		"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+		"plugin.name": "pgoutput",
+		"slot.name" : "debezium",
+		"tasks.max": "1",
+		"database.hostname": "postgres",
+		"database.port": "5432",
+		"database.user": "postgres",
+		"database.password": "postgres",
+		"database.dbname" : "akrana",
+		"database.server.name": "mypg",
+		"table.include.list": "sales.orders,sales.customers,sales.products,sales.order_items",
+		"topic.prefix": "pg.akrana",
+		"tombstones.on.delete": "false",
+		"decimal.handling.mode": "double",
+		"time.precision.mode": "connect",
+		"topic.creation.default.cleanup.policy": "delete",
+        "topic.creation.default.partitions": "1",
+        "topic.creation.default.replication.factor": "1",
+        "topic.creation.default.retention.ms": "604800000",
+        "topic.creation.enable": "true",
+		"snapshot.mode": "initial",
+		"transforms": "ExtractField",
+		"transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+		"transforms.ExtractField.field": "id"
+	}
+}

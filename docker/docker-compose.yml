@@ -54,10 +54,17 @@ services:
     hostname: registry
     ports:
       - 5000:5000
+      # - 443:443 remove 5000:5000 and add 443:443 if you want to use SSL
     volumes:
       - registry_data:/var/lib/registry
     environment:
       REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+      # REGISTRY_HTTP_ADDR: 0.0.0.0:443
+      # REGISTRY_HTTP_TLS_CERTIFICATE: /run/secrets/registry_ssl_crt
+      # REGISTRY_HTTP_TLS_KEY: /run/secrets/registry_ssl_key
+    # secrets:
+    #   - registry_ssl_crt
+    #   - registry_ssl_key
     <<: [*network, *deploy-on-front]
 
 volumes:

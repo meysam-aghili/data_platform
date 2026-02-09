@@ -1,0 +1,134 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+x-superset-common-base: &superset-common-base
+  image: ${SUPERSET_IMAGE}
+  environment:
+    DEV_MODE: "true"
+    SUPERSET_ENV: development
+    FLASK_DEBUG: "true"
+    PYTHONUNBUFFERED: 1
+    COMPOSE_PROJECT_NAME: superset
+    SUPERSET_SECRET_KEY: 6vfd9EiJkAZhFSCiHnyqXYecLRD3sNadi/pQ0VJWO++u02+itoYbWkQU
+    SUPERSET_LOAD_EXAMPLES: "no"
+    CYPRESS_CONFIG: "false"
+    SUPERSET_PORT: 8088
+    MAPBOX_API_KEY: ''
+    ENABLE_PLAYWRIGHT: "false"
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    BUILD_SUPERSET_FRONTEND_IN_DOCKER: "true"
+    SUPERSET_LOG_LEVEL: info
+    PYTHONPATH: /app/pythonpath:/app/docker
+    CELERYD_CONCURRENCY: 2
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+    DATABASE_DB: superset
+    DATABASE_HOST: postgres
+    DATABASE_PASSWORD: postgres
+    DATABASE_USER: postgres
+    DATABASE_PORT: 5432
+    DATABASE_DIALECT: postgresql
+    POSTGRES_DB: superset
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+  <<: *network
+
+x-superset-common: &superset-common
+  <<: [*superset-common-base, *deploy-on-front]
+
+services:
+
+  redis:
+    image: ${REDIS_IMAGE}
+    <<: [*network, *deploy-on-front]
+    # healthcheck:
+    #   test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+    #   <<: *healthcheck-config
+
+  postgres:
+    image: ${POSTGRES_IMAGE}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: superset
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    user: postgres
+    <<: [*network, *deploy-on-front]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost", "-p", "5432"]
+      <<: *healthcheck-config
+  
+  superset:
+    <<: *superset-common
+    ports:
+      - ${SUPERSET_PORT}:8088
+    command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
+
+  superset-init:
+    <<: *superset-common-base
+    command: ["/app/docker/docker-init.sh"]
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == ${HOSTNAME_01}
+      mode: replicated-job
+      replicas: 1
+   
+  superset-worker:
+    <<: *superset-common
+    command: ["/app/docker/docker-bootstrap.sh", "worker"]
+    healthcheck:
+      disable: true
+    # healthcheck:
+      # test: ["CMD", "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$$HOSTNAME"]  this must be fixed by our sh bash at DK
+      # <<: *healthcheck-config
+
+  superset-worker-beat:
+    <<: *superset-common
+    command: ["/app/docker/docker-bootstrap.sh", "beat"]
+    healthcheck:
+      disable: true
+
+volumes:
+  postgres-data:

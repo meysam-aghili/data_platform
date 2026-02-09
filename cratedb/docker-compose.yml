@@ -1,0 +1,93 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+x-cratedb-common: &cratedb-common
+  image: ${CRATEDB_IMAGE}
+  environment:
+      CRATE_HEAP_SIZE: 1g
+      CRATE_JAVA_OPTS: "-javaagent:/jmxdir/crate-jmx-exporter-1.2.0.jar=${CRATEDB_METRICS_PORT} -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false"
+    
+services:
+  cratedb-node-01:
+    hostname: cratedb-node-01
+    <<: [*cratedb-common, *network, *deploy-on-host-01]
+    ports:
+      - 4201:4200
+    # volumes:
+    #   - cratedb-node-01-data:/data
+    configs:
+      - source: cratedb-node-01-config
+        target: /crate/config/crate.yml
+
+  cratedb-node-02:
+    hostname: cratedb-node-02
+    <<: [*cratedb-common, *network, *deploy-on-host-02]
+    ports:
+      - 4202:4200
+    # volumes:
+    #   - cratedb-node-02-data:/data
+    configs:
+      - source: cratedb-node-02-config
+        target: /crate/config/crate.yml
+
+  cratedb-node-03:
+    hostname: cratedb-node-03
+    <<: [*cratedb-common, *network, *deploy-on-host-03]
+    ports:
+      - 4203:4200
+    # volumes:
+    #   - cratedb-node-03-data:/data
+    configs:
+    - source: cratedb-node-03-config
+      target: /crate/config/crate.yml
+
+# volumes:
+#   cratedb-node-01-data:
+#   cratedb-node-02-data:
+#   cratedb-node-03-data:
+
+configs:
+  cratedb-node-01-config:
+    file: ./config/cratedb-node-01.yml
+  cratedb-node-02-config:
+    file: ./config/cratedb-node-02.yml
+  cratedb-node-03-config:
+    file: ./config/cratedb-node-03.yml

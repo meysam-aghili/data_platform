@@ -1,0 +1,44 @@
+[docker]
+docker pull rabbitmq:3.13-management
+docker run -d --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.13-management
+docker exec -it rabbitmq bash
+
+[urls]
+https://www.youtube.com/playlist?list=PLalrWAGybpB-UHbRDhFsBgXJM1g6T4IvO
+https://www.rabbitmq.com/docs
+
+[bash]
+rabbitmq-diagnostics status
+
+# Virtual hosts (vhosts) in RabbitMQ provide a way to logically separate resources such as exchanges, queues, bindings, and user permissions within a single RabbitMQ instance. This allows multiple applications to run on the same RabbitMQ broker while maintaining separation and avoiding conflicts.
+rabbitmqctl list_vhosts
+# / is ther default vhost
+rabbitmqctl add_vhost project9_dev_18 --description 'Dev environment no. 18' --tags dev,project9
+rabbitmqctl delete_vhost project9_dev_18
+
+rabbitmqctl list_users
+rabbitmqctl list_users --formatter=json
+rabbitmqctl add_user 'meysam' 'pass'
+rabbitmqctl delete_user 'username'
+
+# First ".*" for configure permission on every entity
+# Second ".*" for write permission on every entity
+# Third ".*" for read permission on every entity
+rabbitmqctl set_permissions -p "custom-vhost" "username" ".*" ".*" ".*"
+rabbitmqctl clear_permissions -p "custom-vhost" "username"
+rabbitmqctl set_user_tags mqtt-test management
+
+# ldap auth in conf file example
+# sudo apt-get install -y erlang-eldap
+# rabbitmq-plugins enable rabbitmq_auth_backend_ldap
+auth_backends.1 = ldap
+auth_ldap.servers.1  = my-ldap-server
+auth_ldap.servers.2 = 192.168.0.100
+auth_ldap.user_dn_pattern = cn=${username},dc=digikala,dc=com
+auth_ldap.use_ssl    = false
+auth_ldap.port       = 389
+auth_ldap.log        = false
+auth_backends.2 = internal
+
+# mqtt
+rabbitmq-plugins enable rabbitmq_mqtt

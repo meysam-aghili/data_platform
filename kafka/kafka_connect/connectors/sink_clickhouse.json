@@ -1,0 +1,24 @@
+{
+	"name": "sink-clickhouse",
+	"config": {
+  		"connector.class": "com.clickhouse.kafka.connect.ClickHouseSinkConnector",
+  		"tasks.max": "1",
+		"consumer.override.max.poll.records": "5000",
+  		"consumer.override.max.partition.fetch.bytes": "5242880",
+		"errors.retry.timeout": "60",
+		"errors.tolerance": "none",
+		"ssl": "false",
+		"behavior.on.null.values": "ignore",
+		"behavior.on.error": "ignore",
+		"exactlyOnce": "false",
+		"hostname": "clickhouse-node-01",
+  		"port": "8123",
+  		"username": "clickhouse",
+		"password": "clickhouse",
+		"database": "nesaj",
+  		"topics": "pg.akrana.sales.orders,pg.akrana.sales.products,pg.akrana.sales.order_items,pg.akrana.sales.customers",
+  		"topic2TableMap": "pg.akrana.sales.orders=orders,pg.akrana.sales.products=products,pg.akrana.sales.order_items=order_items,pg.akrana.sales.customers=customers",
+		"transforms": "unwrapOnlyNewValues",
+		"transforms.unwrapOnlyNewValues.type": "io.debezium.transforms.ExtractNewRecordState"
+	}
+}

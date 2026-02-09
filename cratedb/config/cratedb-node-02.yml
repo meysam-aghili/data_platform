@@ -1,0 +1,11 @@
+cluster.name: data-platform-crate-cluster
+node.name: cratedb-node-02
+node.data: true
+node.master: true
+network.host: _site_
+discovery.seed_hosts: ["cratedb-node-01","cratedb-node-03"]
+cluster.initial_master_nodes: ["cratedb-node-01","cratedb-node-02","cratedb-node-03"]
+gateway.expected_data_nodes: 3
+gateway.recover_after_data_nodes: 2
+http.cors.enabled: true
+http.cors.allow-origin: "*"

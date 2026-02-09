@@ -1,0 +1,127 @@
+version: "3.9"
+
+networks:
+  platform:
+    external: true
+
+x-network: &network
+  networks:
+    - platform
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+x-deploy-on-front: &deploy-on-front
+  deploy:
+    replicas: 1
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+
+x-deploy-on-host-01: &deploy-on-host-01
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_01}
+x-deploy-on-host-02: &deploy-on-host-02
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_02}
+x-deploy-on-host-03: &deploy-on-host-03
+  deploy:
+    placement:
+      constraints:
+        - node.hostname == ${HOSTNAME_03}
+        
+##################################################################
+
+x-spark-common: &spark-common
+  image: ${SPARK_IMAGE}
+
+x-spark-common-env: &spark-common-env
+  SPARK_METRICS_ENABLED: "true"
+  SPARK_RPC_AUTHENTICATION_ENABLED: no
+  SPARK_RPC_ENCRYPTION_ENABLED: no
+  SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: no
+  SPARK_SSL_ENABLED: no
+
+x-spark-master-common-env: &spark-master-common-env
+  <<: *spark-common-env
+  SPARK_MODE: master
+
+x-spark-worker-common-env: &spark-worker-common-env
+  <<: *spark-common-env
+  SPARK_MODE: worker
+  SPARK_MASTER_URL: spark://spark-master:7077
+  SPARK_WORKER_MEMORY: 1G
+  SPARK_WORKER_CORES: 1
+  SPARK_WORKER_OPTS: "-Dspark.worker.cleanup.enabled=true -Dspark.worker.cleanup.interval=600" # removing temporary files
+  SPARK_JAVA_OPTS: "-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp" # generate heap dump file in /tmp whenever OutOfMemoryError encountered
+
+services:
+  spark-master:
+    <<: [*spark-common, *network, *deploy-on-front]
+    ports:
+      - ${SPARK_UI_PORT}:8080
+      - ${SPARK_RPC_PORT}:7077
+    environment:
+      <<: *spark-master-common-env
+
+  spark-worker:
+    <<: [*spark-common, *network]
+    environment:
+      <<: *spark-worker-common-env
+    deploy:
+      replicas: 3
+      # placement:
+      #   max_replicas_per_node: 1
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0" 
+        reservations:
+          memory: 1G
+          cpus: "1.0"
+
+  spark-connect:
+    <<: [*spark-common, *network, *deploy-on-front]
+    ports:
+      - ${SPARK_CONNECT_UI_PORT}:4040
+      - ${SPARK_CONNECT_PORT}:15002
+    environment:
+      <<: *spark-master-common-env
+    command: ["bash", "-c", "/opt/bitnami/spark/sbin/start-connect-server.sh --jars /opt/bitnami/spark/jars/spark-connect_2.12-3.5.0.jar"]
+
+  spark-jupyterhub:
+    image: ${JUPYTERHUB_IMAGE}
+    hostname: spark-jupyterhub
+    environment:
+      CONFIGPROXY_AUTH_TOKEN: ${JUPYTERHUB_PROXY_TOKEN}
+      DOCKER_NETWORK_NAME: ${DOCKER_NETWORK_NAME}
+      DOCKER_NOTEBOOK_IMAGE: ${JUPYTERHUB_IMAGE}
+      DOCKER_NOTEBOOK_DIR: ${DOCKER_NOTEBOOK_DIR}
+      DOCKER_REGISTRY_URL: ${DOCKER_REGISTRY_URL}
+      HOST_NOTEBOOKS_DIR: ${HOST_NOTEBOOKS_DIR}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HOST_NOTEBOOKS_DIR}:/mnt/nfsdir
+    configs:
+      - source: jupyterhub-config
+        target: /srv/jupyterhub/jupyterhub_config.py
+    <<: [*network, *deploy-on-front]
+    
+  spark-jupyterhub-proxy:
+    image: ${JUPYTERHUB_PROXY_IMAGE}
+    hostname: spark-jupyterhub-proxy
+    ports:
+      - ${JUPYTERHUB_PROXY_PORT}:8000
+    command: ["configurable-http-proxy", "--error-target", "http://spark-jupyterhub/hub/error"]
+    <<: [*network, *deploy-on-front]
+
+configs:
+  jupyterhub-config:
+    file: ./jupyterhub/config/jupyterhub_config.py

@@ -1,0 +1,30 @@
+{
+	"name": "source-postgres-iot-sensors",
+	"config": {
+		"connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+		"plugin.name": "pgoutput",
+		"slot.name" : "debezium_2",
+		"tasks.max": "1",
+		"database.hostname": "postgres",
+		"database.port": "5432",
+		"database.user": "postgres",
+		"database.password": "postgres",
+		"database.dbname" : "iot",
+		"database.server.name": "mypg",
+		"table.include.list": "sensors.sensor_data",
+		"topic.prefix": "pg.iot",
+		"tombstones.on.delete": "false",
+		"decimal.handling.mode": "double",
+		"topic.creation.default.cleanup.policy": "delete",
+        "topic.creation.default.partitions": "1",
+        "topic.creation.default.replication.factor": "1",
+        "topic.creation.default.retention.ms": "604800000",
+        "topic.creation.enable": "true",
+		"snapshot.mode": "initial",
+		"time.precision.mode": "connect",
+		"transforms": "ExtractField,unwrapOnlyNewValues",
+		"transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Key",
+		"transforms.ExtractField.field": "id",
+		"transforms.unwrapOnlyNewValues.type": "io.debezium.transforms.ExtractNewRecordState"
+	}
+}

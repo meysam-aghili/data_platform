@@ -1,4 +1,3 @@
-[ ] registry
 [ ] xray on netherland
 [ ] observe
 [ ] client

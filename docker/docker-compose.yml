@@ -68,8 +68,8 @@ services:
 
 configs:
   registry-htpasswd:
-    name: ./configs/htpasswd
-    file: registry-htpasswd_2026-02-09-v1
+    file: ./configs/htpasswd
+    name: registry-htpasswd_2026-02-09-v1
 
 volumes:
   portainer-data:

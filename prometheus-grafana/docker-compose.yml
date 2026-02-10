@@ -82,7 +82,7 @@ services:
         GF_USERS_ALLOW_SIGN_UP: 'false'
         GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-clickhouse-datasource
         GF_SERVER_DOMAIN: meysamaghili.ir
-        GF_SERVER_ROOT_URL: https://meysamaghili.ir/grafana
+        GF_SERVER_ROOT_URL: https://meysamaghili.ir/grafana/
         GF_SERVER_SERVE_FROM_SUB_PATH: "true"
     secrets:
       - GRAFANA_ADMIN_PASSWORD

@@ -41,6 +41,7 @@ docker secret create RESUME_SSL_KEY privkey.pem
 cd /etc/letsencrypt/live/git.meysamaghili.ir/
 docker secret create GIT_SSL_CERT ./fullchain.pem
 docker secret create GIT_SSL_KEY privkey.pem
+printf '' | docker secret create GRAFANA_ADMIN_PASSWORD -
 printf "postgresql+psycopg2://airflow:airflow@postgres/airflow" | docker secret create AIRFLOW_DB_CONN_URI -
 printf "db+postgresql://airflow:airflow@postgres/airflow" | docker secret create AIRFLOW_DB_BACKEND_CONN_URI -
 printf "airflow" | docker secret create AIRFLOW_POSTGRES_PASSWORD -

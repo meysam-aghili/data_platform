@@ -34,3 +34,9 @@ jobs:
           cd data_platform
           ./parse_compose_envs.sh docker/docker-compose.yml .env
           docker stack deploy -c docker/docker-compose.prod.yml docker
+
+      - name: Deploy prometheus-grafana
+        run: |
+          cd data_platform
+          ./parse_compose_envs.sh prometheus-grafana/docker-compose.yml .env
+          docker stack deploy -c prometheus-grafana/docker-compose.prod.yml prometheus_grafana

@@ -1,13 +1,5 @@
 version: "3.9"
 
-networks:
-  resume:
-    external: true
-
-x-network: &network
-  networks:
-    - resume
-
 x-healthcheck-config: &healthcheck-config
   interval: 30s
   timeout: 10s
@@ -39,10 +31,17 @@ x-deploy-on-host-03: &deploy-on-host-03
         
 ##################################################################
 
-services:
+networks:
+  data_platform:
+    external: true
 
+x-network: &network
+  networks:
+    - data_platform
+
+services:
   prometheus:
-    image: prom/prometheus:v3.7.3
+    image: prom/prometheus:v3.9.1
     ports:
       - 9090:9090
     volumes:
@@ -54,22 +53,42 @@ services:
         target: /etc/prometheus/alert-rules.yml
     <<: [*network, *deploy-on-front]
     extra_hosts:
-      - 'host-01:${HOSTIP_01}'
-      - 'host-02:${HOSTIP_02}'
+      - 'host-01:192.168.100.80'
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       <<: *healthcheck-config
 
   alertmanager:
-    image: prom/alertmanager:v0.29.0
+    image: prom/alertmanager:v0.31.0
     ports:
       - 9093:9093
-    # configs:
-    #   - source: alertmanager-config
-    #     target: /etc/alertmanager/alertmanager.yml
+    configs:
+      - source: alertmanager-config
+        target: /etc/alertmanager/alertmanager.yml
     <<: [*network, *deploy-on-front]
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9093/-/healthy"]
+      <<: *healthcheck-config
+
+  grafana:
+    image: grafana/grafana:12.3.2
+    ports:
+      - 10000:3000
+    # volumes:
+    #   - grafana-data:/var/lib/grafana
+    environment:
+        GF_SECURITY_ADMIN_USER: grafana
+        GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/GRAFANA_ADMIN_PASSWORD
+        GF_USERS_ALLOW_SIGN_UP: 'false'
+        GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-clickhouse-datasource
+        GF_SERVER_DOMAIN: meysamaghili.ir
+        GF_SERVER_ROOT_URL: https://meysamaghili.ir/grafana
+        GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    secrets:
+      - GRAFANA_ADMIN_PASSWORD
+    <<: [*network, *deploy-on-front]
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
       <<: *healthcheck-config
 
   node-exporter:
@@ -91,41 +110,19 @@ services:
       # - "^/(rootfs/)?(dev|etc|host|proc|run|sys|volume1)($$|/)"
     <<: *network
 
-  cadvisor:
-    image: zcube/cadvisor:v0.45.0
-    deploy:
-      mode: global
-    ports:
-      - 9101:8080
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:rw
-      - /sys:/sys:ro
-      - /var/lib/docker/:/var/lib/docker:ro
-      - /dev/disk/:/dev/disk:ro
-    <<: *network
-
-  grafana:
-    image: grafana/grafana:12.0.3
-    ports:
-      - 3001:3000
-    volumes:
-      - grafana-data:/var/lib/grafana
-      # - /mnt/nfs/grafana/dashboards:/var/lib/grafana/dashboards
-    configs:
-      - source: grafana-provider
-        target: /etc/grafana/provisioning/dashboards/default.yaml
-      - source: grafana-datasources
-        target: /etc/grafana/provisioning/datasources/datasources.yaml
-    environment:
-        GF_SECURITY_ADMIN_USER: grafana
-        GF_SECURITY_ADMIN_PASSWORD: grafana
-        GF_USERS_ALLOW_SIGN_UP: 'false'
-        GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: grafana-clickhouse-datasource
-    <<: [*network, *deploy-on-front]
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
-      <<: *healthcheck-config
+  # cadvisor:
+  #   image: zcube/cadvisor:v0.45.0
+  #   deploy:
+  #     mode: global
+  #   ports:
+  #     - 9101:8080
+  #   volumes:
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:rw
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker/:/var/lib/docker:ro
+  #     - /dev/disk/:/dev/disk:ro
+  #   <<: *network
 
 volumes:
   prometheus-data:
@@ -141,9 +138,7 @@ configs:
   prometheus-alert-rules:
     file: ./configs/alert-rules.yml
     name: prometheus-alert-config_2025-11-14-v1
-  grafana-provider:
-    file: ./configs/dashboard-provider.yaml
-    name: grafana-provider_2025-11-14-v1
-  grafana-datasources:
-    file: ./configs/datasources.yaml
-    name: grafana-datasources_2025-11-14-v1
+
+secrets:
+  GRAFANA_ADMIN_PASSWORD:
+     external: true
